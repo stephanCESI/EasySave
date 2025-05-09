@@ -31,30 +31,24 @@ namespace EasySave.Core.Services
             _localizationService = localizationService;
             _maxBackupJobs = maxBackupJobs;
 
-            // Charger les paramètres depuis AppSettings.json
             var settings = AppSettings.Load();
 
             _logDirectory = settings.LogDirectory;
 
-            LoadJobsFromFile();  // Charger les jobs au démarrage
+            LoadJobsFromFile();
         }
 
-
-        // Sauvegarder les jobs dans un fichier JSON
         public void SaveJobsToFile()
         {
             try
             {
-                // Chemin complet du fichier dans le répertoire des logs
                 string filePath = Path.Combine(_logDirectory, "backupJobs.json");
 
-                // Créer le répertoire s'il n'existe pas
                 if (!Directory.Exists(_logDirectory))
                 {
                     Directory.CreateDirectory(_logDirectory);
                 }
 
-                // Sérialiser la liste des jobs en JSON avec un format lisible
                 string jsonContent = JsonConvert.SerializeObject(_backupJobs, Formatting.Indented);
                 File.WriteAllText(filePath, jsonContent);
 
@@ -66,7 +60,6 @@ namespace EasySave.Core.Services
             }
         }
 
-        // Charger les jobs depuis un fichier JSON
         public void LoadJobsFromFile()
         {
             try
@@ -172,7 +165,6 @@ namespace EasySave.Core.Services
             {
                 System.Console.WriteLine(_localizationService.GetLocalizedString("backupStartedInfo", job.Name));
 
-                // Vérifier si les répertoires source et cible existent
                 if (!Directory.Exists(job.SourcePath))
                 {
                     System.Console.WriteLine(_localizationService.GetLocalizedString("errorSourceDirectoryNotFound", job.SourcePath));
@@ -195,7 +187,6 @@ namespace EasySave.Core.Services
                     string relativePath = Path.GetRelativePath(job.SourcePath, file);
                     string destinationFile = Path.Combine(job.TargetPath, relativePath);
 
-                    // Sauvegarde différentielle : ignorer les fichiers déjà à jour
                     if (job.Type == BackupType.Differential &&
                         File.Exists(destinationFile) &&
                         File.GetLastWriteTime(file) <= File.GetLastWriteTime(destinationFile))
@@ -214,7 +205,6 @@ namespace EasySave.Core.Services
                         copiedSize += fileSize;
                         processedFiles++;
 
-                        // Loguer chaque fichier copié
                         _logger.LogBackupAction(job.Name, file, destinationFile, fileSize, transferTime);
 
                         System.Console.WriteLine(_localizationService.GetLocalizedString("fileBackedUp", file, destinationFile, fileSize, transferTime));
@@ -224,7 +214,6 @@ namespace EasySave.Core.Services
                         System.Console.WriteLine(_localizationService.GetLocalizedString("errorFileCopy", file, ex.Message));
                     }
 
-                    // Afficher la progression
                     double progression = (double)processedFiles / totalFiles * 100;
                     System.Console.WriteLine(_localizationService.GetLocalizedString("progression", processedFiles, totalFiles, progression));
                 }

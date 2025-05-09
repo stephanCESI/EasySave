@@ -10,8 +10,6 @@ namespace EasySave.Core.Utils
         public string LogDirectory { get; set; }
         public int MaxBackupJobs { get; set; }
 
-
-        // Charger les paramètres depuis AppSettings.json
         public static AppSettings Load()
         {
             try
@@ -39,7 +37,6 @@ namespace EasySave.Core.Utils
             catch (Exception ex)
             {
                 System.Console.WriteLine($"Erreur lors du chargement des paramètres : {ex.Message}");
-                // Valeurs par défaut en cas d'erreur
                 return new AppSettings
                 {
                     DefaultLanguage = "en",

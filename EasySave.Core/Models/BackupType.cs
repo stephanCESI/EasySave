@@ -2,7 +2,7 @@
 {
     public enum BackupType
     {
-        Full,        // Sauvegarde complète
-        Differential // Sauvegarde différentielle
+        Full,
+        Differential
     }
 }
