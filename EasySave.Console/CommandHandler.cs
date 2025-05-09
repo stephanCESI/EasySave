@@ -36,7 +36,7 @@ namespace EasySave.Console
                     ChangeLanguage();
                     break;
                 case "help":
-                    ConsoleUI.ShowHelp();
+                    ConsoleUI.ShowHelp(_localizationService);
                     break;
                 default:
                     ConsoleUI.ShowMessage(_localizationService.GetLocalizedString("invalidCommand"));
@@ -47,10 +47,10 @@ namespace EasySave.Console
         private void AddJob()
         {
             ConsoleUI.ShowMessage(_localizationService.GetLocalizedString("addJobMessage"));
-            string name = ConsoleUI.GetUserInput("Nom du job : ");
-            string sourcePath = ConsoleUI.GetUserInput("Chemin source : ").Trim('\"');
-            string targetPath = ConsoleUI.GetUserInput("Chemin cible : ").Trim('\"');
-            string typeInput = ConsoleUI.GetUserInput("Type de sauvegarde (Complète tapez 1 / Différentielle tapez 2) : ");
+            string name = ConsoleUI.GetUserInput(_localizationService.GetLocalizedString("jobName"));
+            string sourcePath = ConsoleUI.GetUserInput(_localizationService.GetLocalizedString("sourcePath")).Trim('\"');
+            string targetPath = ConsoleUI.GetUserInput(_localizationService.GetLocalizedString("targetPath")).Trim('\"');
+            string typeInput = ConsoleUI.GetUserInput(_localizationService.GetLocalizedString("typeSave"));
 
             BackupType backupType = typeInput switch
             {
@@ -68,7 +68,7 @@ namespace EasySave.Console
             _backupService.ListBackupJobs();
 
             ConsoleUI.ShowMessage(_localizationService.GetLocalizedString("deleteJobMessage"));
-            string input = ConsoleUI.GetUserInput("Entrez le numéro du job à supprimer : ");
+            string input = ConsoleUI.GetUserInput(_localizationService.GetLocalizedString("deleteJobNumber"));
 
             if (int.TryParse(input, out int jobNumber))
             {
@@ -84,7 +84,7 @@ namespace EasySave.Console
         {
             _backupService.ListBackupJobs();
             ConsoleUI.ShowMessage(_localizationService.GetLocalizedString("runJobMessage"));
-            string input = ConsoleUI.GetUserInput("Entrez le numéro du job à exécuter (ou une plage x-y ou une liste x;y) : ");
+            string input = ConsoleUI.GetUserInput(_localizationService.GetLocalizedString("runJobNumber"));
 
             // Vérifier si l'entrée est un nombre simple
             if (int.TryParse(input, out int singleJobNumber))
@@ -135,7 +135,7 @@ namespace EasySave.Console
 
         private void ChangeLanguage()
         {
-            ConsoleUI.ShowMessage("Choisissez une langue : 1 pour Français, 2 pour Anglais");
+            ConsoleUI.ShowMessage(_localizationService.GetLocalizedString("choseLanguage"));
             string choice = ConsoleUI.GetUserInput("> ");
             string language = choice switch
             {

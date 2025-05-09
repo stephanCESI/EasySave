@@ -55,7 +55,6 @@ namespace EasySave.Localization
             if (_localizations.ContainsKey(language))
             {
                 _currentLanguage = language;
-                Console.WriteLine($"Langue changée en {language}");
             }
             else
             {

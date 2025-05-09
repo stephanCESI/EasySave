@@ -1,4 +1,5 @@
 ﻿using System;
+using EasySave.Core.Services;
 using EasySave.Localization;
 
 namespace EasySave.Console
@@ -10,16 +11,17 @@ namespace EasySave.Console
             System.Console.WriteLine(localizationService.GetLocalizedString("welcomeMessage"));
         }
 
-        public static void ShowHelp()
+        public static void ShowHelp(LocalizationService localizationService)
         {
-            System.Console.WriteLine("Liste des commandes disponibles :");
-            System.Console.WriteLine("  - listjobs      : Liste les jobs de sauvegarde");
-            System.Console.WriteLine("  - addjob        : Ajouter un job de sauvegarde");
-            System.Console.WriteLine("  - deletejob     : Supprimer un job de sauvegarde");
-            System.Console.WriteLine("  - runjob        : Exécuter un job de sauvegarde");
-            System.Console.WriteLine("  - language      : Changer la langue");
-            System.Console.WriteLine("  - help          : Afficher l'aide");
-            System.Console.WriteLine("  - exit          : Quitter l'application");
+            System.Console.WriteLine(localizationService.GetLocalizedString("commandLists"));
+            System.Console.WriteLine("  - listjobs      : " + localizationService.GetLocalizedString("listJobsDescription"));
+            System.Console.WriteLine("  - addjob        : " + localizationService.GetLocalizedString("addJobDescription"));
+            System.Console.WriteLine("  - deletejob     : " + localizationService.GetLocalizedString("deleteJobDescription"));
+            System.Console.WriteLine("  - runjob        : " + localizationService.GetLocalizedString("runJobDescription"));
+            System.Console.WriteLine("  - language      : " + localizationService.GetLocalizedString("changeLanguageDescription"));
+            System.Console.WriteLine("  - help          : " + localizationService.GetLocalizedString("helpDescription"));
+            System.Console.WriteLine("  - exit          : " + localizationService.GetLocalizedString("exitDescription"));
+
         }
 
         public static void ShowMessage(string message)

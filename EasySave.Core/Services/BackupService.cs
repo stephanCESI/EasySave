@@ -62,7 +62,7 @@ namespace EasySave.Core.Services
             }
             catch (Exception ex)
             {
-                System.Console.WriteLine($"Erreur lors de la sauvegarde des jobs : {ex.Message}");
+                System.Console.WriteLine(_localizationService.GetLocalizedString("addJobError")+ ex.Message);
             }
         }
 
@@ -86,12 +86,12 @@ namespace EasySave.Core.Services
                 }
                 else
                 {
-                    System.Console.WriteLine("Aucun fichier de jobs trouvé. Un nouveau fichier sera créé lors de la première sauvegarde.");
+                    System.Console.WriteLine(_localizationService.GetLocalizedString("noJobsFoundNewFile"));
                 }
             }
             catch (Exception ex)
             {
-                System.Console.WriteLine($"Erreur lors du chargement des jobs : {ex.Message}");
+                System.Console.WriteLine(_localizationService.GetLocalizedString("errorLoadJobs") + ex.Message);
             }
         }
 
@@ -155,11 +155,16 @@ namespace EasySave.Core.Services
                 return;
             }
 
+            int index = 1;
+
             foreach (var job in _backupJobs)
             {
-                System.Console.WriteLine(_localizationService.GetLocalizedString("jobListItem", job.Name, job.SourcePath, job.TargetPath, job.Type, job.IsActive));
+                System.Console.WriteLine($"{index}. {_localizationService.GetLocalizedString("jobListItem", job.Name, job.SourcePath, job.TargetPath, job.Type, job.IsActive)}");
+                System.Console.WriteLine();
+                index++;
             }
         }
+
 
         private void PerformBackup(BackupJob job)
         {

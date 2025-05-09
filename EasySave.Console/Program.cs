@@ -29,15 +29,14 @@ namespace EasySave.Console
             _localizationService.LoadLocalizations();
 
             ConsoleUI.ShowWelcomeMessage(_localizationService);
-            ConsoleUI.ShowHelp();
+            ConsoleUI.ShowHelp(_localizationService);
 
             string command;
             while (true)
             {
-                command = ConsoleUI.GetUserInput("Entrez une commande : ");
+                command = ConsoleUI.GetUserInput(_localizationService.GetLocalizedString("enterCommand"));
                 if (command == "exit")
                 {
-                    ConsoleUI.ShowMessage("Au revoir !");
                     break;
                 }
                 _commandHandler.Execute(command);
