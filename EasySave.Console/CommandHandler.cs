@@ -48,8 +48,8 @@ namespace EasySave.Console
         {
             ConsoleUI.ShowMessage(_localizationService.GetLocalizedString("addJobMessage"));
             string name = ConsoleUI.GetUserInput("Nom du job : ");
-            string sourcePath = ConsoleUI.GetUserInput("Chemin source : ");
-            string targetPath = ConsoleUI.GetUserInput("Chemin cible : ");
+            string sourcePath = ConsoleUI.GetUserInput("Chemin source : ").Trim('\"');
+            string targetPath = ConsoleUI.GetUserInput("Chemin cible : ").Trim('\"');
             string typeInput = ConsoleUI.GetUserInput("Type de sauvegarde (Complète tapez 1 / Différentielle tapez 2) : ");
 
             BackupType backupType = typeInput switch
@@ -61,6 +61,7 @@ namespace EasySave.Console
 
             _backupService.CreateBackupJob(name, sourcePath, targetPath, backupType);
         }
+
 
         private void DeleteJob()
         {
@@ -83,17 +84,54 @@ namespace EasySave.Console
         {
             _backupService.ListBackupJobs();
             ConsoleUI.ShowMessage(_localizationService.GetLocalizedString("runJobMessage"));
-            string input = ConsoleUI.GetUserInput("Entrez le numéro du job à exécuter : ");
+            string input = ConsoleUI.GetUserInput("Entrez le numéro du job à exécuter (ou une plage x-y ou une liste x;y) : ");
 
-            if (int.TryParse(input, out int jobNumber))
+            // Vérifier si l'entrée est un nombre simple
+            if (int.TryParse(input, out int singleJobNumber))
             {
-                _backupService.RunBackupJobByIndex(jobNumber - 1);
+                _backupService.RunBackupJobByIndex(singleJobNumber - 1);
+                return;
             }
-            else
+
+            // Vérifier si l'entrée est une plage au format x-y
+            if (input.Contains("-"))
             {
-                ConsoleUI.ShowMessage(_localizationService.GetLocalizedString("invalidJobNumber"));
+                string[] range = input.Split('-');
+                if (range.Length == 2 &&
+                    int.TryParse(range[0], out int start) &&
+                    int.TryParse(range[1], out int end))
+                {
+                    for (int i = start; i <= end; i++)
+                    {
+                        _backupService.RunBackupJobByIndex(i - 1);
+                    }
+                    return;
+                }
             }
+
+            // Vérifier si l'entrée est une liste au format x;y
+            if (input.Contains(";"))
+            {
+                string[] jobs = input.Split(';');
+                foreach (string job in jobs)
+                {
+                    if (int.TryParse(job, out int jobNumber))
+                    {
+                        _backupService.RunBackupJobByIndex(jobNumber - 1);
+                    }
+                    else
+                    {
+                        ConsoleUI.ShowMessage(_localizationService.GetLocalizedString("invalidJobNumber"));
+                        return;
+                    }
+                }
+                return;
+            }
+
+            // Message d'erreur si l'entrée est incorrecte
+            ConsoleUI.ShowMessage(_localizationService.GetLocalizedString("invalidJobNumber"));
         }
+
 
         private void ChangeLanguage()
         {
