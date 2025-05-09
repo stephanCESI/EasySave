@@ -9,5 +9,9 @@
   <ItemGroup>
     <ProjectReference Include="..\EasySave.Localization\EasySave.Localization.csproj" />
     <ProjectReference Include="..\EasySave.Logging\EasySave.Logging.csproj" />
+
+	  <None Update="Utils\AppSettings.json">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
   </ItemGroup>
 </Project>

@@ -9,16 +9,16 @@ namespace EasySave.Localization
     {
         private Dictionary<string, Dictionary<string, string>> _localizations;
         private string _currentLanguage;
-        private string _resourcesPath; // Déclaration de _resourcesPath ici
+        private string _resourcesPath;
 
         public LocalizationService(string defaultLanguage = "en")
         {
             _currentLanguage = defaultLanguage;
             _localizations = new Dictionary<string, Dictionary<string, string>>();
 
-            // Initialisation du chemin vers les ressources dans le constructeur
-            string solutionDirectory = Directory.GetParent(AppDomain.CurrentDomain.BaseDirectory).Parent.Parent.Parent.Parent.FullName;
-            _resourcesPath = Path.Combine(solutionDirectory, "EasySave.Localization", "Resources");
+            // Définir le chemin des ressources à partir du répertoire de base
+            string basePath = AppContext.BaseDirectory;
+            _resourcesPath = Path.Combine(basePath, "Resources");
 
             LoadLocalizations();
         }
@@ -27,20 +27,21 @@ namespace EasySave.Localization
         {
             try
             {
-                var languages = new[] { "en", "fr" }; // Langues disponibles
-
-                // Si _resourcesPath se termine par un séparateur, l'enlever
-                string normalizedPath = _resourcesPath.TrimEnd(Path.DirectorySeparatorChar);
+                var languages = new[] { "en", "fr" };
 
                 foreach (var language in languages)
                 {
-                    var filePath = Path.Combine(normalizedPath, $"{language}.json"); // Combine sans double séparateur
+                    var filePath = Path.Combine(_resourcesPath, $"{language}.json");
 
                     if (File.Exists(filePath))
                     {
                         var jsonContent = File.ReadAllText(filePath);
                         var localization = JsonConvert.DeserializeObject<Dictionary<string, string>>(jsonContent);
                         _localizations[language] = localization;
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Fichier de localisation '{filePath}' introuvable.");
                     }
                 }
             }
@@ -59,7 +60,7 @@ namespace EasySave.Localization
             else
             {
                 Console.WriteLine($"Langue '{language}' non trouvée. Utilisation de la langue par défaut.");
-                _currentLanguage = "en"; // Revenir à la langue par défaut (anglais) si la langue n'existe pas
+                _currentLanguage = "en";
             }
         }
 
@@ -71,7 +72,8 @@ namespace EasySave.Localization
                 return string.Format(formatString, args);
             }
 
-            return key; // Si la clé n'existe pas, renvoyer la clé comme message
+            return key;
         }
     }
+
 }

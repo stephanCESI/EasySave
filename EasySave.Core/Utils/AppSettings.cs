@@ -14,9 +14,10 @@ namespace EasySave.Core.Utils
         {
             try
             {
-
-                string solutionDirectory = Directory.GetParent(AppDomain.CurrentDomain.BaseDirectory).Parent.Parent.Parent.Parent.FullName;
-                var filePath = Path.Combine(solutionDirectory, "EasySave.Core", "Utils", "AppSettings.json");
+                // Récupérer le répertoire de base de l'application
+                string basePath = AppContext.BaseDirectory;
+                // Construire le chemin vers AppSettings.json
+                var filePath = Path.Combine(basePath,"Utils", "AppSettings.json");
 
                 if (File.Exists(filePath))
                 {
@@ -25,7 +26,7 @@ namespace EasySave.Core.Utils
                 }
                 else
                 {
-                    System.Console.WriteLine($"Fichier de configuration '{filePath}' introuvable. Utilisation des paramètres par défaut.");
+                    Console.WriteLine($"Fichier de configuration '{filePath}' introuvable. Utilisation des paramètres par défaut.");
                     return new AppSettings
                     {
                         DefaultLanguage = "en",
@@ -36,7 +37,7 @@ namespace EasySave.Core.Utils
             }
             catch (Exception ex)
             {
-                System.Console.WriteLine($"Erreur lors du chargement des paramètres : {ex.Message}");
+                Console.WriteLine($"Erreur lors du chargement des paramètres : {ex.Message}");
                 return new AppSettings
                 {
                     DefaultLanguage = "en",
@@ -45,5 +46,6 @@ namespace EasySave.Core.Utils
                 };
             }
         }
+
     }
 }
