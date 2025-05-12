@@ -1,7 +1,10 @@
 ﻿using System;
 using EasySave.Core.Models;
 using EasySave.Core.Services;
+using EasySave.Core.Utils;
 using EasySave.Localization;
+using EasySave.Logging;
+using Newtonsoft.Json;
 
 namespace EasySave.Console
 {
@@ -9,11 +12,14 @@ namespace EasySave.Console
     {
         private readonly BackupService _backupService;
         private readonly LocalizationService _localizationService;
+        private Logger _logger;  // Propriété pour le logger
 
         public CommandHandler(BackupService backupService, LocalizationService localizationService)
         {
             _backupService = backupService;
             _localizationService = localizationService;
+            AppSettings settings = AppSettings.Load();
+            _logger = new Logger(settings.LogDirectory, settings.LogFileType);
         }
 
         public void Execute(string command)
@@ -34,6 +40,9 @@ namespace EasySave.Console
                     break;
                 case "language":
                     ChangeLanguage();
+                    break;
+                case "logtype":
+                    ChangeLogFileType();
                     break;
                 case "help":
                     ConsoleUI.ShowHelp(_localizationService);
@@ -147,5 +156,61 @@ namespace EasySave.Console
             _localizationService.SetLanguage(language);
             ConsoleUI.ShowMessage(_localizationService.GetLocalizedString("languageChanged", language));
         }
+
+        private void ChangeLogFileType()
+        {
+            AppSettings settings = AppSettings.Load();
+
+            // Afficher le type actuel
+            ConsoleUI.ShowMessage(_localizationService.GetLocalizedString("actualLogTypeFile", settings.LogFileType));
+
+            // Demander le nouveau type
+            ConsoleUI.ShowMessage(_localizationService.GetLocalizedString("choseLogTypeFile"));
+            string choice = ConsoleUI.GetUserInput("> ");
+            string filetype = choice switch
+            {
+                "1" => "xml",
+                "2" => "json",
+                _ => null
+            };
+
+            // Vérifier si le choix est valide
+            if (filetype == null)
+            {
+                ConsoleUI.ShowMessage(_localizationService.GetLocalizedString("errorLogTypeFileChanged", settings.LogFileType));
+                return;
+            }
+
+            // Mettre à jour le type de fichier de log
+            settings.LogFileType = filetype;
+            SaveSettings(settings);
+
+            // Recharger le logger avec le nouveau type
+            _logger = new Logger(settings.LogDirectory, settings.LogFileType);
+
+            // Confirmer le changement
+            ConsoleUI.ShowMessage(_localizationService.GetLocalizedString("logTypeFileChanged", filetype));
+        }
+
+
+
+
+        private void SaveSettings(AppSettings settings)
+        {
+            try
+            {
+                string basePath = AppContext.BaseDirectory;
+                string filePath = Path.Combine(basePath, "Utils", "AppSettings.json");
+
+                // Sauvegarder les paramètres dans le fichier JSON
+                string jsonContent = JsonConvert.SerializeObject(settings, Formatting.Indented);
+                File.WriteAllText(filePath, jsonContent);
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"Erreur lors de la sauvegarde des paramètres : {ex.Message}");
+            }
+        }
+
     }
 }

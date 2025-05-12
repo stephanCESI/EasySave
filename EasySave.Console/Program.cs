@@ -19,8 +19,8 @@ namespace EasySave.Console
             // Charger les paramètres depuis AppSettings.json
             _appSettings = AppSettings.Load();
 
-            ILogWriter logWriter = new JsonLogWriter(_appSettings.LogDirectory);
-            Logger logger = new Logger(logWriter);
+            // Initialiser le logger en utilisant le répertoire et le type de fichier depuis les paramètres
+            Logger logger = new Logger(_appSettings.LogDirectory, _appSettings.LogFileType);
 
             _localizationService = new LocalizationService(_appSettings.DefaultLanguage);
             _backupService = new BackupService(logger, _localizationService, _appSettings.MaxBackupJobs);

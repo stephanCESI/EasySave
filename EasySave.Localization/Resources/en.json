@@ -46,5 +46,10 @@
     "exitDescription": "Exit the application",
     "addJobError": "Save error while saving jobs",
     "noJobsFoundNewFile": "No job file found. A new file will be created during the first save.",
-    "errorLoadJobs": "Error loading jobs:"
+    "errorLoadJobs": "Error loading jobs:",
+    "changeLogFileTypeDescription": "Change log file type",
+    "choseLogTypeFile": "Chose a file type for logs : 1 for xml, 2 for json",
+    "logTypeFileChanged": "Log file type change in : {0}.",
+    "actualLogTypeFile": "Actual log file type : {0}.",
+    "errorLogTypeFileChanged": "Error while changing the log file type, the type remains unchanged : {0}."
 }

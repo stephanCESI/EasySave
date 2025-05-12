@@ -46,5 +46,10 @@
     "exitDescription": "Quitter l'application",
     "addJobError": "Erreur lors de la sauvegarde des jobs",
     "noJobsFoundNewFile": "Aucun fichier de jobs trouvé. Un nouveau fichier sera créé lors de la première sauvegarde.",
-    "errorLoadJobs": "Erreur lors du chargement des jobs:"
+    "errorLoadJobs": "Erreur lors du chargement des jobs:",
+    "changeLogFileTypeDescription": "Changer le type de fichier des logs",
+    "choseLogTypeFile": "Choisissez un type de fichier pour les logs : 1 pour xml, 2 pour json",
+    "logTypeFileChanged": "Type de fichier de log changé en : {0}.",
+    "actualLogTypeFile": "Type de fichier de log actuel : {0}.",
+    "errorLogTypeFileChanged" :  "Erreur lors du changement de type de fichier de log, le type reste inchangé : {0}."
 }

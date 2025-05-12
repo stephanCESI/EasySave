@@ -19,6 +19,7 @@ namespace EasySave.Console
             System.Console.WriteLine("  - deletejob     : " + localizationService.GetLocalizedString("deleteJobDescription"));
             System.Console.WriteLine("  - runjob        : " + localizationService.GetLocalizedString("runJobDescription"));
             System.Console.WriteLine("  - language      : " + localizationService.GetLocalizedString("changeLanguageDescription"));
+            System.Console.WriteLine("  - logtype      : " + localizationService.GetLocalizedString("changeLogFileTypeDescription"));
             System.Console.WriteLine("  - help          : " + localizationService.GetLocalizedString("helpDescription"));
             System.Console.WriteLine("  - exit          : " + localizationService.GetLocalizedString("exitDescription"));
 

@@ -5,11 +5,16 @@ namespace EasySave.Logging
 {
     public class Logger
     {
-        private readonly ILogWriter _logWriter;
+        private ILogWriter _logWriter;
 
-        public Logger(ILogWriter logWriter)
+        public Logger(string logDirectory, string logFileType)
         {
-            _logWriter = logWriter;
+            // Choisir le writer en fonction du type de fichier de log
+            _logWriter = logFileType.ToLower() switch
+            {
+                "xml" => new XmlLogWriter(logDirectory),
+                _ => new JsonLogWriter(logDirectory) // Par défaut : JSON
+            };
         }
 
         public void LogBackupAction(string name, string fileSource, string fileTarget, long fileSize, double fileTransferTime)
