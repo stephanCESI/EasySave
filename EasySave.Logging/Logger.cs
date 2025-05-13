@@ -17,9 +17,9 @@ namespace EasySave.Logging
             };
         }
 
-        public void LogBackupAction(string name, string fileSource, string fileTarget, long fileSize, double fileTransferTime)
+        public void LogBackupAction(string name, string fileSource, string fileTarget, long fileSize, double fileTransferTime, double encryptionTime, bool jobStopped)
         {
-            var logEntry = new LogEntry(name, fileSource, fileTarget, fileSize, fileTransferTime, DateTime.Now);
+            var logEntry = new LogEntry(name, fileSource, fileTarget, fileSize, fileTransferTime, DateTime.Now, encryptionTime, jobStopped);
             _logWriter.WriteLog(logEntry);
             System.Console.WriteLine($"Log créé pour le fichier : {fileSource} -> {fileTarget}");
         }

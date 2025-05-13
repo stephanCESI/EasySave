@@ -218,8 +218,10 @@ namespace EasySave.Core.Services
                         long fileSize = new FileInfo(file).Length;
                         copiedSize += fileSize;
                         processedFiles++;
+                        double encryptionTime = 0; // CHANGER
+                        bool jobStopped = false; // CHANGER
 
-                        _logger.LogBackupAction(job.Name, file, destinationFile, fileSize, transferTime);
+                        _logger.LogBackupAction(job.Name, file, destinationFile, fileSize, transferTime, encryptionTime, jobStopped);
 
                         System.Console.WriteLine(_localizationService.GetLocalizedString("fileBackedUp", file, destinationFile, fileSize, transferTime));
                     }

@@ -10,8 +10,10 @@ namespace EasySave.Core.Models
         public long FileSize { get; set; }
         public double FileTransferTime { get; set; }
         public DateTime Time { get; set; }
+        public double EncryptionTime { get; set; }
+        public bool JobStopped {  get; set; }
 
-        public LogEntry(string name, string fileSource, string fileTarget, long fileSize, double fileTransferTime, DateTime time)
+        public LogEntry(string name, string fileSource, string fileTarget, long fileSize, double fileTransferTime, DateTime time, double encryptionTime, bool jobStopped)
         {
             Name = name;
             FileSource = fileSource;
@@ -19,6 +21,8 @@ namespace EasySave.Core.Models
             FileSize = fileSize;
             FileTransferTime = fileTransferTime;
             Time = time;
+            EncryptionTime = encryptionTime;
+            JobStopped = jobStopped;
         }
     }
 }
