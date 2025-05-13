@@ -15,9 +15,7 @@ namespace EasySave.Core.Utils
         {
             try
             {
-                // Récupérer le répertoire de base de l'application
                 string basePath = AppContext.BaseDirectory;
-                // Construire le chemin vers AppSettings.json
                 var filePath = Path.Combine(basePath,"Utils", "AppSettings.json");
 
                 if (File.Exists(filePath))

@@ -20,7 +20,7 @@ namespace EasySave.Core.Services
         private readonly LocalizationService _localizationService;
         private readonly int _maxBackupJobs;
         private readonly string _logDirectory;
-        private readonly string _backupjobs;
+        private readonly StateManager _stateManager;
 
         public BackupService(Logger logger, LocalizationService localizationService, int maxBackupJobs)
         {
@@ -32,8 +32,9 @@ namespace EasySave.Core.Services
             _maxBackupJobs = maxBackupJobs;
 
             var settings = AppSettings.Load();
-
             _logDirectory = settings.LogDirectory;
+
+            _stateManager = new StateManager(_logDirectory);
 
             LoadJobsFromFile();
         }
@@ -137,7 +138,6 @@ namespace EasySave.Core.Services
 
             PerformBackup(job);
             job.IsActive = false;
-            System.Console.WriteLine(_localizationService.GetLocalizedString("backupCompleted", job.Name));
         }
 
         public void ListBackupJobs()
@@ -170,6 +170,7 @@ namespace EasySave.Core.Services
                     System.Console.WriteLine(_localizationService.GetLocalizedString("errorSourceDirectoryNotFound", job.SourcePath));
                     return;
                 }
+
                 if (!Directory.Exists(job.TargetPath))
                 {
                     Directory.CreateDirectory(job.TargetPath);
@@ -181,6 +182,19 @@ namespace EasySave.Core.Services
                 long totalSize = files.Sum(file => new FileInfo(file).Length);
                 int processedFiles = 0;
                 long copiedSize = 0;
+
+                var state = new BackupState(job.Name)
+                {
+                    SourceFilePath = job.SourcePath,
+                    TargetFilePath = job.TargetPath,
+                    State = "ACTIVE",
+                    TotalFilesToCopy = totalFiles,
+                    TotalFilesSize = totalSize,
+                    NbFilesLeftToDo = totalFiles,
+                    Progression = 0
+                };
+
+                _stateManager.UpdateState(state);
 
                 foreach (string file in files)
                 {
@@ -215,15 +229,23 @@ namespace EasySave.Core.Services
                     }
 
                     double progression = (double)processedFiles / totalFiles * 100;
-                    System.Console.WriteLine(_localizationService.GetLocalizedString("progression", processedFiles, totalFiles, progression));
+                    state.NbFilesLeftToDo = totalFiles - processedFiles;
+                    state.Progression = progression;
+
+                    _stateManager.UpdateState(state);
                 }
 
                 System.Console.WriteLine(_localizationService.GetLocalizedString("backupCompletedInfo", job.Name, processedFiles, totalFiles, copiedSize));
+
+                state.State = "END";
+                state.Progression = 100;
+                _stateManager.UpdateState(state);
             }
             catch (Exception ex)
             {
                 System.Console.WriteLine(_localizationService.GetLocalizedString("errorBackupFailed", ex.Message));
             }
         }
+
     }
 }
