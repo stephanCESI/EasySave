@@ -1,7 +1,0 @@
-﻿listjobs - Affiche tous les jobs de sauvegarde
-addjob - Ajoute un nouveau job de sauvegarde
-deletejob - Supprime un job par son numéro
-runjob - Lance un job spécifique
-language - Permet le choix de la langue
-help - Affiche la liste des commandes
-exit - Quitte l'application
