@@ -80,17 +80,17 @@
             <Label Grid.Row="0" FontSize="Title" Text="Ajouter un JOB"  HorizontalOptions="Center" TextColor="Black"/>
             <StackLayout Orientation="Vertical" Grid.Row="1" HorizontalOptions="Center" MinimumWidthRequest="250">
                 <Label Text="Nom" TextColor="Black"/>
-                <Entry  Background="{StaticResource SecColor}" TextColor="Black"/>
+                <Entry Placeholder="Nom du job" Text="{Binding JobName}" Background="{StaticResource SecColor}" TextColor="Black"/>
                 <Label Text="SourcePath" TextColor="Black"/>
-                <Entry  Background="{StaticResource SecColor}" TextColor="Black"/>
+                <Entry Placeholder="Chemin source" Text="{Binding SourcePath}" Background="{StaticResource SecColor}" TextColor="Black"/>
                 <Label Text="DestionationPath" TextColor="Black"/>
-                <Entry  Background="{StaticResource SecColor}" TextColor="Black"/>
+                <Entry Placeholder="Chemin destination" Text="{Binding DestinationPath}" Background="{StaticResource SecColor}" TextColor="Black"/>
                 <Label Text="Back" TextColor="Black"/>
-                <Entry  Background="{StaticResource SecColor}" TextColor="Black"/>
+                <Entry Placeholder="Type de backup" Text="{Binding BackupType}" Background="{StaticResource SecColor}" TextColor="Black"/>
             </StackLayout>
             <StackLayout Orientation="Horizontal" Grid.Row="2" Spacing="50" HorizontalOptions="Center">
                 <Button Grid.Column="3" Text="Annuler"  MaximumWidthRequest="150" BackgroundColor="Tomato" Clicked="ClickCancelButton"/>
-                <Button Grid.Column="3" Text="Ajouter"  MaximumWidthRequest="150" BackgroundColor="LimeGreen" Clicked="ClickAddButton"/>
+                <Button Text="Ajouter Job" Command="{Binding AddJobCommand}" Grid.Column="3" MaximumWidthRequest="150" BackgroundColor="LimeGreen"/>
             </StackLayout>
         </Grid>
         

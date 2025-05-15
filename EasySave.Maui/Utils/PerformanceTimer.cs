@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 
-namespace EasySave.Core.Utils
+namespace EasySave.Maui.Utils
 {
     public class PerformanceTimer
     {

@@ -1,9 +1,10 @@
 ﻿using System;
 using System.IO;
 using System.Xml;
-using EasySave.Core.Models;
+using EasySave.Maui.Interfaces;
+using EasySave.Maui.Models;
 
-namespace EasySave.Logging
+namespace EasySave.Maui.Logging
 {
     public class XmlLogWriter : ILogWriter
     {

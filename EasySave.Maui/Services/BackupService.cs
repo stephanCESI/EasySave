@@ -3,13 +3,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using EasySave.Core.Interfaces;
-using EasySave.Core.Models;
-using EasySave.Core.Utils;
-using EasySave.Logging;
-using EasySave.Localization;
+using EasySave.Maui.Interfaces;
+using EasySave.Maui.Models;
+using EasySave.Maui.Utils;
+using EasySave.Maui.Logging;
+using EasySave.Maui.Localizations;
 
-namespace EasySave.Core.Services
+namespace EasySave.Maui.Services
 {
     public class BackupService : IBackupService
     {
@@ -156,6 +156,11 @@ namespace EasySave.Core.Services
                 System.Console.WriteLine();
                 index++;
             }
+        }
+
+        public IReadOnlyList<BackupJob> GetJobs()
+        {
+            return _backupJobs.AsReadOnly();
         }
 
 

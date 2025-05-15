@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
-using EasySave.Core.Models;
+using EasySave.Maui.Models;
 
-namespace EasySave.Core.Services
+namespace EasySave.Maui.Services
 {
     public class StateManager
     {

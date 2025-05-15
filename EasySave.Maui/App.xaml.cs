@@ -8,10 +8,10 @@ namespace EasySave.Maui
         {
             InitializeComponent();
 
-            MainPage = new AppShell();
-
-            MainPage = new NavigationPage(new MainPage(new MainViewModel()));
-
+            // Récupère l'instance de MainPage via le conteneur DI
+            MainPage = new NavigationPage(
+                MauiProgram.CreateMauiApp().Services.GetRequiredService<MainPage>()
+            );
         }
     }
 }

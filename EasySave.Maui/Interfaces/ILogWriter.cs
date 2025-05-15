@@ -1,6 +1,6 @@
-﻿using EasySave.Core.Models;
+﻿using EasySave.Maui.Models;
 
-namespace EasySave.Logging
+namespace EasySave.Maui.Interfaces
 {
     public interface ILogWriter
     {

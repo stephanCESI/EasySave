@@ -1,8 +1,8 @@
 ﻿using System;
 using System.IO;
-using EasySave.Core.Models;
+using EasySave.Maui.Models;
 
-namespace EasySave.Core.Utils
+namespace EasySave.Maui.Utils
 {
     public class FileHelper
     {

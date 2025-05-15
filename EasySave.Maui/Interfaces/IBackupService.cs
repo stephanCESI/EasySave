@@ -1,6 +1,6 @@
-﻿using EasySave.Core.Models;
+﻿using EasySave.Maui.Models;
 
-namespace EasySave.Core.Interfaces
+namespace EasySave.Maui.Interfaces
 {
     public interface IBackupService
     {

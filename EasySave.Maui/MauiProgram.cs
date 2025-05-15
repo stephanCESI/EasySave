@@ -1,4 +1,9 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using EasySave.Maui.Localizations;
+using EasySave.Maui.Logging;
+using EasySave.Maui.Services;
+using EasySave.Maui.Utils;
+using EasySave.Maui.ViewModels;
+using Microsoft.Extensions.Logging;
 
 namespace EasySave.Maui
 {
@@ -15,8 +20,31 @@ namespace EasySave.Maui
                     fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
                 });
 
+            // Charger les paramètres
+            var settings = AppSettings.Load();
+
+            // Enregistrer le Logger avec le répertoire de logs et le type de fichier
+            builder.Services.AddSingleton(sp =>
+                new Logger(settings.LogDirectory, settings.LogFileType));
+
+            // Enregistrer les autres services
+            builder.Services.AddSingleton<LocalizationService>();
+
+            // Enregistrer le BackupService en injectant le Logger et le LocalizationService
+            builder.Services.AddSingleton(sp =>
+                new BackupService(
+                    sp.GetRequiredService<Logger>(),
+                    sp.GetRequiredService<LocalizationService>(),
+                    settings.MaxBackupJobs));
+
+            // Enregistrer le ViewModel
+            builder.Services.AddTransient<MainViewModel>();
+
+            // Enregistrer la MainPage
+            builder.Services.AddTransient<MainPage>();
+
 #if DEBUG
-    		builder.Logging.AddDebug();
+            builder.Logging.AddDebug();
 #endif
 
             return builder.Build();

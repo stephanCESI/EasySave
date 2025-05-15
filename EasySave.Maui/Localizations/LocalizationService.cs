@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
 
-namespace EasySave.Localization
+namespace EasySave.Maui.Localizations
 {
     public class LocalizationService
     {

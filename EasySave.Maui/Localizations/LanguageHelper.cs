@@ -1,4 +1,4 @@
-﻿namespace EasySave.Localization
+﻿namespace EasySave.Maui.Localizations
 {
     public static class LanguageHelper
     {

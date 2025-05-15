@@ -1,8 +1,8 @@
 ﻿using System;
 using System.IO;
-using EasySave.Core.Interfaces;
+using EasySave.Maui.Interfaces;
 
-namespace EasySave.Core.Services
+namespace EasySave.Maui.Services
 {
     public class DirectoryManager
     {

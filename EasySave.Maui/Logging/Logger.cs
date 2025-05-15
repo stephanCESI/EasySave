@@ -1,7 +1,8 @@
 ﻿using System;
-using EasySave.Core.Models;
+using EasySave.Maui.Interfaces;
+using EasySave.Maui.Models;
 
-namespace EasySave.Logging
+namespace EasySave.Maui.Logging
 {
     public class Logger
     {

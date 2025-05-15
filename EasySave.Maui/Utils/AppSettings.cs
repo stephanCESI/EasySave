@@ -2,7 +2,7 @@
 using System;
 using System.IO;
 
-namespace EasySave.Core.Utils
+namespace EasySave.Maui.Utils
 {
     public class AppSettings
     {

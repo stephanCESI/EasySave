@@ -1,4 +1,4 @@
-﻿namespace EasySave.Core.Interfaces
+﻿namespace EasySave.Maui.Interfaces
 {
     public interface IFileHelper
     {

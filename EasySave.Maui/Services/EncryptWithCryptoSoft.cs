@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using System.IO;
 
-namespace EasySave.MAUI.Services
+namespace EasySave.Maui.Services
 {
     public class EncryptWithCryptoSoft
     {

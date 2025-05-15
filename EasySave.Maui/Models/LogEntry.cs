@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace EasySave.Core.Models
+namespace EasySave.Maui.Models
 {
     public class LogEntry
     {
