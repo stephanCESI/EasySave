@@ -9,16 +9,23 @@
             InitializeComponent();
         }
 
-        private void OnCounterClicked(object sender, EventArgs e)
+        private void ClickAddJobButton(object sender, EventArgs e)
         {
-            count++;
+            MainContent.Opacity = 0.5;
+            MainContent.BackgroundColor = Colors.Gray;
+            PopUpAddJob.IsVisible = true;
+        }
 
-            if (count == 1)
-                CounterBtn.Text = $"Clicked {count} time";
-            else
-                CounterBtn.Text = $"Clicked {count} times";
+        private void ClickCancelButton(object sender, EventArgs e)
+        {
+            MainContent.Opacity = 1;
+            MainContent.BackgroundColor = Colors.White;
+            PopUpAddJob.IsVisible = false;
+        }
 
-            SemanticScreenReader.Announce(CounterBtn.Text);
+        private void ClickAddButton(object sender, EventArgs e)
+        {
+
         }
     }
 
