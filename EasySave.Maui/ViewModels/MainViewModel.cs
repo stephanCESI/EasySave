@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using EasySave.Maui.Localizations;
 using EasySave.Maui.Models;
 using EasySave.Maui.Services;
 using System.Collections.ObjectModel;
@@ -8,6 +9,7 @@ namespace EasySave.Maui.ViewModels;
 public partial class MainViewModel : ObservableObject
 {
     private readonly BackupService _backupService;
+    private readonly LocalizationService _localizationService;
 
     public ObservableCollection<BackupJob> Jobs { get; } = new();
 
@@ -30,6 +32,12 @@ public partial class MainViewModel : ObservableObject
     bool isVisibleDeleteJob;
 
     [ObservableProperty]
+    private bool isFrench;
+
+    [ObservableProperty]
+    private string addButtonText;
+
+    [ObservableProperty]
     private ObservableCollection<BackupJob> selectedJobs = new();
 
     partial void OnSelectedJobsChanged(ObservableCollection<BackupJob> value)
@@ -41,15 +49,33 @@ public partial class MainViewModel : ObservableObject
 
     public Array BackupTypes { get; } = Enum.GetValues(typeof(BackupType));
 
+
+    private void UpdateTexts()
+    {
+        AddButtonText = _localizationService.GetLocalizedString("addJob");
+    }
+
+    partial void OnIsFrenchChanged(bool value)
+    {
+        string language = value ? "fr" : "en";
+        _localizationService.SetLanguage(language);
+        UpdateTexts();
+        OnPropertyChanged(nameof(IsFrench));
+    }
+
     [ObservableProperty]
     public string selectedJobNames;
 
-    public MainViewModel(BackupService backupService)
+    public MainViewModel(BackupService backupService, LocalizationService localizationService)
     {
         _backupService = backupService;
+        _localizationService = localizationService;
         LoadJobs();
         IsVisibleAddJob = false;
         IsVisibleDeleteJob = false;
+
+        IsFrench = LanguageHelper.GetCurrentLanguage(_localizationService) == "fr";
+        UpdateTexts();
     }
 
     public void LoadJobs()
@@ -89,7 +115,11 @@ public partial class MainViewModel : ObservableObject
             return;
         }
 
-        _backupService.CreateBackupJob(JobName, SourcePath, TargetPath, selectedBackupType);
+        // Nettoyer les chemins en enlevant les guillemets superflus
+        var cleanedSourcePath = SourcePath.Trim('"');
+        var cleanedTargetPath = TargetPath.Trim('"');
+
+        _backupService.CreateBackupJob(JobName, cleanedSourcePath, cleanedTargetPath, selectedBackupType);
         LoadJobs();
         IsVisibleAddJob = false;
 
@@ -98,6 +128,7 @@ public partial class MainViewModel : ObservableObject
         TargetPath = string.Empty;
         SelectedBackupType = BackupType.Full;
     }
+
 
     [RelayCommand]
     private void DeleteSelectedJobs()
@@ -116,5 +147,26 @@ public partial class MainViewModel : ObservableObject
         }
         IsVisibleDeleteJob = false;
         SelectedJobs.Clear();
+    }
+
+    [RelayCommand]
+    private void RunSelectedJobs()
+    {
+        if (SelectedJobs == null || SelectedJobs.Count == 0)
+            return;
+
+        foreach (var job in SelectedJobs.ToList()) // copie pour éviter modification pendant itération
+        {
+            _backupService.RunBackupJob(job);
+        }
+    }
+
+    [RelayCommand]
+    private void RunAllJobs()
+    {
+        foreach (var job in Jobs)
+        {
+            _backupService.RunBackupJob(job);
+        }
     }
 }

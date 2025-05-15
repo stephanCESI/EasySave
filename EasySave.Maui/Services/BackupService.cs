@@ -143,6 +143,21 @@ namespace EasySave.Maui.Services
             job.IsActive = false;
         }
 
+        public void RunBackupJob(BackupJob job)
+        {
+            if (job == null) return;
+
+            System.Console.WriteLine(_localizationService.GetLocalizedString("backupStarted", job.Name));
+            job.IsActive = true;
+            job.LastRun = DateTime.Now;
+
+            PerformBackup(job);
+
+            job.IsActive = false;
+        }
+
+
+
         public void ListBackupJobs()
         {
             if (!_backupJobs.Any())
@@ -250,6 +265,8 @@ namespace EasySave.Maui.Services
                 state.State = "END";
                 state.Progression = 100;
                 _stateManager.UpdateState(state);
+
+                LoadJobsFromFile();
             }
             catch (Exception ex)
             {

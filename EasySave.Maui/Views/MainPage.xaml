@@ -17,7 +17,13 @@
             <Grid Grid.Row="0" ColumnDefinitions="auto, *, auto" Margin="5">
                 <Image Source="dotnet_bot.png" WidthRequest="50" HeightRequest="50" />
                 <StackLayout Grid.Column="2" Orientation="Horizontal" Spacing="25">
-                    <Switch />
+                    <StackLayout>
+                        <Label Text="Changer la langue" FontSize="Medium" TextColor="Black"/>
+                        <Switch IsToggled="{Binding IsFrench}" x:Name="LanguageSwitch" Toggled="OnLanguageToggled" />
+                        <Label x:Name="LanguageLabel" Text="Langue actuelle : Anglais" TextColor="Black"/>
+
+                    </StackLayout>
+
                     <Switch />
                     <Button  Text="Paramètres"  MaximumWidthRequest="150" BackgroundColor="{StaticResource MainColor}"/>
                 </StackLayout>
@@ -69,7 +75,7 @@
                                 <!-- Affichage des données -->
                                 <Label Text="{Binding Name}" Grid.Column="1" TextColor="Black"/>
                                 <Label Text="{Binding SourcePath}" Grid.Column="2" TextColor="Black"/>
-                                <Label Text="{Binding DestinationPath}" Grid.Column="3" TextColor="Black"/>
+                                <Label Text="{Binding TargetPath}" Grid.Column="3" TextColor="Black"/>
                                 <Label Text="{Binding Type}" Grid.Column="4" TextColor="Black"/>
                                 <Label Text="{Binding LastRun, StringFormat='{0:dd/MM/yyyy HH:mm}'}" Grid.Column="5" TextColor="Black"/>
                             </Grid>
@@ -79,16 +85,16 @@
 
 
                 <StackLayout Orientation="Vertical" Grid.Column="1" Spacing="20" VerticalOptions="Center">
-                    <Button Command="{Binding OpenAddJobPopUpCommand}" Grid.Column="3" Text="Ajouter"  MaximumWidthRequest="200" BackgroundColor="{StaticResource MainColor}"/>
+                    <Button Command="{Binding OpenAddJobPopUpCommand}" Grid.Column="3" Text="{Binding AddButtonText}"  MaximumWidthRequest="200" BackgroundColor="{StaticResource MainColor}"/>
                     <Button 
                         Text="Supprimer le job sélectionné" 
                         Command="{Binding OpenDeleteJobPopUpCommand}"
                         Grid.Column="3" MaximumWidthRequest="200" BackgroundColor="{StaticResource MainColor}"
                         TextColor="White"/>
+                    <Button Grid.Column="3" Text="Lancer tout"  MaximumWidthRequest="200" BackgroundColor="{StaticResource MainColor}" Command="{Binding RunAllJobsCommand}"/>
+                    <Button Grid.Column="3" Text="Lancer les jobs sélectionnés"  MaximumWidthRequest="200" BackgroundColor="{StaticResource MainColor}" Command="{Binding RunSelectedJobsCommand}" />
 
-                    <Button Grid.Column="3" Text="Lancer 1"  MaximumWidthRequest="200" BackgroundColor="{StaticResource MainColor}"/>
-                    <Button Grid.Column="3" Text="Lancer tout"  MaximumWidthRequest="200" BackgroundColor="{StaticResource MainColor}"/>
-                    <Button Grid.Column="3" Text="Lancer les jobs sélectionnés"  MaximumWidthRequest="200" BackgroundColor="{StaticResource MainColor}"/>
+
                     <Button Grid.Column="3" Text="Créer une sélection"  MaximumWidthRequest="200" BackgroundColor="{StaticResource MainColor}"/>
                 </StackLayout>
             </Grid >

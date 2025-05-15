@@ -9,7 +9,7 @@ namespace EasySave.Maui.Localizations
     {
         private Dictionary<string, Dictionary<string, string>> _localizations;
         private string _currentLanguage;
-        private string _resourcesPath;
+        private string _localizationsPath;
 
         public LocalizationService(string defaultLanguage = "en")
         {
@@ -18,7 +18,7 @@ namespace EasySave.Maui.Localizations
 
             // Définir le chemin des ressources à partir du répertoire de base
             string basePath = AppContext.BaseDirectory;
-            _resourcesPath = Path.Combine(basePath, "Resources");
+            _localizationsPath = Path.Combine(basePath, "Localizations");
 
             LoadLocalizations();
         }
@@ -31,7 +31,7 @@ namespace EasySave.Maui.Localizations
 
                 foreach (var language in languages)
                 {
-                    var filePath = Path.Combine(_resourcesPath, $"{language}.json");
+                    var filePath = Path.Combine(_localizationsPath, $"{language}.json");
 
                     if (File.Exists(filePath))
                     {

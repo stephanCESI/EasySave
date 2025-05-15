@@ -1,4 +1,5 @@
-﻿using EasySave.Maui.Models;
+﻿using EasySave.Maui.Localizations;
+using EasySave.Maui.Models;
 using EasySave.Maui.ViewModels;
 
 namespace EasySave.Maui
@@ -25,6 +26,17 @@ namespace EasySave.Maui
                 }
             }
         }
+
+        private void OnLanguageToggled(object sender, ToggledEventArgs e)
+        {
+            string language = e.Value ? "Français" : "Anglais";
+            LanguageLabel.Text = $"Langue actuelle : {language}";
+
+            // Appel à ton service pour changer la langue
+            var localizationService = new LocalizationService();
+            localizationService.SetLanguage(e.Value ? "fr" : "en");
+        }
+
 
     }
 
