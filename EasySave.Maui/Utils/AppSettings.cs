@@ -15,16 +15,18 @@ namespace EasySave.Maui.Utils
             try
             {
                 string basePath = AppContext.BaseDirectory;
-                var filePath = Path.Combine(basePath,"Utils", "AppSettings.json");
+                string projectRoot = Path.Combine(basePath, "..", "..", "..", "..", "..");
+                string utilsPath = Path.Combine(projectRoot, "Utils", "AppSettings.json");
+                string fullPath = Path.GetFullPath(utilsPath);
 
-                if (File.Exists(filePath))
+                if (File.Exists(fullPath))
                 {
-                    string jsonContent = File.ReadAllText(filePath);
+                    string jsonContent = File.ReadAllText(fullPath);
                     return JsonConvert.DeserializeObject<AppSettings>(jsonContent);
                 }
                 else
                 {
-                    Console.WriteLine($"Fichier de configuration '{filePath}' introuvable. Utilisation des paramètres par défaut.");
+                    Console.WriteLine($"Fichier de configuration '{fullPath}' introuvable. Utilisation des paramètres par défaut.");
                     return new AppSettings
                     {
                         DefaultLanguage = "en",

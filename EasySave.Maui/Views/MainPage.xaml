@@ -24,7 +24,12 @@
 
                     </StackLayout>
 
-                    <Switch />
+                    <StackLayout>
+                        <Label Text="Changer le format de log" FontSize="Medium" TextColor="Black"/>
+                        <Switch IsToggled="{Binding IsXmlLog}"/>
+                        <Label Text="Format actuel : json" TextColor="Black"/>
+                    </StackLayout>
+                    
                     <Button  Text="Paramètres"  MaximumWidthRequest="150" BackgroundColor="{StaticResource MainColor}"/>
                 </StackLayout>
 
@@ -90,7 +95,7 @@
                         Text="Supprimer le job sélectionné" 
                         Command="{Binding OpenDeleteJobPopUpCommand}"
                         Grid.Column="3" MaximumWidthRequest="200" BackgroundColor="{StaticResource MainColor}"
-                        TextColor="White"/>
+                        TextColor="Black"/>
                     <Button Grid.Column="3" Text="Lancer tout"  MaximumWidthRequest="200" BackgroundColor="{StaticResource MainColor}" Command="{Binding RunAllJobsCommand}"/>
                     <Button Grid.Column="3" Text="Lancer les jobs sélectionnés"  MaximumWidthRequest="200" BackgroundColor="{StaticResource MainColor}" Command="{Binding RunSelectedJobsCommand}" />
 

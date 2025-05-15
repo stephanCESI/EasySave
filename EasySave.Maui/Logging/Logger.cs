@@ -13,8 +13,8 @@ namespace EasySave.Maui.Logging
             // Choisir le writer en fonction du type de fichier de log
             _logWriter = logFileType.ToLower() switch
             {
-                "xml" => new XmlLogWriter(logDirectory),
-                _ => new JsonLogWriter(logDirectory) // Par défaut : JSON
+                "xml" => new XmlLogWriter(Path.Combine(AppContext.BaseDirectory, logDirectory)),
+                _ => new JsonLogWriter(Path.Combine(AppContext.BaseDirectory, logDirectory)) // Par défaut : JSON
             };
         }
 

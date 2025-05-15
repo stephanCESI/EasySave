@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using EasySave.Maui.Localizations;
 using EasySave.Maui.Models;
 using EasySave.Maui.Services;
+using EasySave.Maui.Utils;
 using System.Collections.ObjectModel;
 
 namespace EasySave.Maui.ViewModels;
@@ -49,6 +50,22 @@ public partial class MainViewModel : ObservableObject
 
     public Array BackupTypes { get; } = Enum.GetValues(typeof(BackupType));
 
+    private bool _isXmlLog;
+    public bool IsXmlLog
+    {
+        get => _isXmlLog;
+        set
+        {
+            if (SetProperty(ref _isXmlLog, value))
+            {
+                // Met à jour le type de log dans le fichier de configuration
+                var logFileType = _isXmlLog ? "xml" : "json";
+                AppSettingsHelper.SetLogFileType(logFileType);
+                Console.WriteLine($"LogFileType mis à jour : {logFileType}");
+            }
+        }
+    }
+
 
     private void UpdateTexts()
     {
@@ -76,6 +93,9 @@ public partial class MainViewModel : ObservableObject
 
         IsFrench = LanguageHelper.GetCurrentLanguage(_localizationService) == "fr";
         UpdateTexts();
+
+        var logFileType = AppSettingsHelper.GetLogFileType();
+        IsXmlLog = logFileType.Equals("xml", StringComparison.OrdinalIgnoreCase);
     }
 
     public void LoadJobs()
@@ -169,4 +189,14 @@ public partial class MainViewModel : ObservableObject
             _backupService.RunBackupJob(job);
         }
     }
+
+    [RelayCommand]
+    private void ToggleLogFileType(bool isXml)
+    {
+        var logFileType = isXml ? "xml" : "json";
+        AppSettingsHelper.SetLogFileType(logFileType);
+
+        // Si besoin, tu peux aussi recharger le logger ici avec la nouvelle config
+    }
+
 }

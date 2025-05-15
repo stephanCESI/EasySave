@@ -55,6 +55,8 @@ namespace EasySave.Maui.Logging
             AddElement("FileSize", logEntry.FileSize.ToString());
             AddElement("FileTransferTime", logEntry.FileTransferTime.ToString());
             AddElement("Time", logEntry.Time.ToString("O"));
+            AddElement("EncryptionTime", logEntry.EncryptionTime.ToString("O"));
+            AddElement("JobStopped", logEntry.JobStopped.ToString());
 
             // Ajouter l'élément au document
             root.AppendChild(logElement);
