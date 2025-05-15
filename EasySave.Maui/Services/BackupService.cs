@@ -122,7 +122,6 @@ namespace EasySave.Maui.Services
             {
                 _backupJobs.Remove(job);
                 SaveJobsToFile();
-                Console.WriteLine(_localizationService.GetLocalizedString("jobDeleted", name));
             }
         }
 

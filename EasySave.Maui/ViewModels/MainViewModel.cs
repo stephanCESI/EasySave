@@ -30,9 +30,19 @@ public partial class MainViewModel : ObservableObject
     bool isVisibleDeleteJob;
 
     [ObservableProperty]
-    private BackupJob? selectedJob;
+    private ObservableCollection<BackupJob> selectedJobs = new();
+
+    partial void OnSelectedJobsChanged(ObservableCollection<BackupJob> value)
+    {
+        OnPropertyChanged(nameof(IsDeleteButtonEnabled));
+    }
+
+    public bool IsDeleteButtonEnabled => SelectedJobs.Count > 0;
 
     public Array BackupTypes { get; } = Enum.GetValues(typeof(BackupType));
+
+    [ObservableProperty]
+    public string selectedJobNames;
 
     public MainViewModel(BackupService backupService)
     {
@@ -59,6 +69,8 @@ public partial class MainViewModel : ObservableObject
     private void OpenDeleteJobPopUp()
     {
         IsVisibleDeleteJob = true;
+
+        SelectedJobNames = string.Join(", ", SelectedJobs.Select(job => job.Name));
     }
 
     [RelayCommand]
@@ -88,16 +100,21 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void DeleteSelectedJob()
+    private void DeleteSelectedJobs()
     {
-        if (SelectedJob == null) return;
+        if (SelectedJobs == null || SelectedJobs.Count == 0)
+        {
 
-        // Supprime le job dans le service
-        _backupService.DeleteBackupJobByName(SelectedJob.Name);
+            IsVisibleDeleteJob = false;
+            return;
+        }
 
-        // Retire le job de la liste observable
-        Jobs.Remove(SelectedJob);
-        SelectedJob = null;
+        foreach (var job in SelectedJobs.ToList()) // Créer une copie pour éviter les erreurs de modification
+        {
+            _backupService.DeleteBackupJobByName(job.Name);
+            Jobs.Remove(job);
+        }
         IsVisibleDeleteJob = false;
+        SelectedJobs.Clear();
     }
 }
