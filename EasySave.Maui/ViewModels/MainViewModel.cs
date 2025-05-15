@@ -3,10 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using CommunityToolkit.Mvvm.ComponentModel;
+namespace EasySave.Maui.ViewModels;
 
-namespace EasySave.Maui.ViewModels
+public partial class MainViewModel : ObservableObject
 {
-    internal class MainViewModel
-    {
-    }
 }

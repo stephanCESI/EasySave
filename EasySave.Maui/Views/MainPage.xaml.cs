@@ -1,10 +1,13 @@
-﻿namespace EasySave.Maui
+﻿using EasySave.Maui.ViewModels;
+
+namespace EasySave.Maui
 {
     public partial class MainPage : ContentPage
     {
-        public MainPage()
+        public MainPage(MainViewModel vm)
         {
             InitializeComponent();
+            BindingContext = vm;
         }
 
         private void ClickAddJobButton(object sender, EventArgs e)
@@ -19,7 +22,8 @@
             MainContent.Opacity = 1;
             MainContent.BackgroundColor = Colors.White;
             PopUpAddJob.IsVisible = false;
-            PopUpRunSelection.IsVisible = false;
+            PopUpCreateSelection.IsVisible = false;
+            PopUpParameters.IsVisible = false;
 
         }
 
@@ -35,13 +39,6 @@
             PopUpParameters.IsVisible = true;
         }
 
-        private void ClickCancelParametersButton(object sender, EventArgs e)
-        {
-            MainContent.Opacity = 1;
-            MainContent.BackgroundColor = Colors.White;
-            PopUpParameters.IsVisible = false;
-        }
-
         private void ClickConfirmParametersButton(object send, EventArgs e) { 
         
 
@@ -52,11 +49,12 @@
             
         }
 
-        private void ClickLaunchSelectionButton(object sender, EventArgs e)
+        private void ClickPopUpCreateSelection(object sender, EventArgs e)
         {
+
             MainContent.Opacity = 0.5;
             MainContent.BackgroundColor = Colors.Gray;
-            PopUpRunSelection.IsVisible = true;
+            PopUpCreateSelection.IsVisible = true;
         }
     }
 
