@@ -19,7 +19,7 @@
                 <StackLayout Grid.Column="2" Orientation="Horizontal" Spacing="25">
                     <Switch />
                     <Switch />
-                    <Button  Text="Paramètres"  MaximumWidthRequest="150" BackgroundColor="{StaticResource MainColor}"  Clicked="ClickParametersButton"/>
+                    <Button  Text="Paramètres"  MaximumWidthRequest="150" BackgroundColor="{StaticResource MainColor}"/>
                 </StackLayout>
 
             </Grid>
@@ -30,48 +30,52 @@
                     <ColumnDefinition Width="0.25*"/>
                     <ColumnDefinition Width="auto"/>
                 </Grid.ColumnDefinitions>
-                <CollectionView Background="{StaticResource Gray100}">
+                <CollectionView ItemsSource="{Binding Jobs}" Background="{StaticResource Gray100}">
                     <CollectionView.Header>
                         <Grid Padding="10"
               BackgroundColor="{StaticResource MainColor}"
               ColumnDefinitions="*,*,*,*,*,*">
-                            <Label Text="ID" TextColor="White"  Grid.Column="0" />
-                            <Label Text="Nom" TextColor="White"  Grid.Column="1" />
-                            <Label Text="SourcePath" TextColor="White"  Grid.Column="2" />
-                            <Label Text="DestinationPath" TextColor="White"  Grid.Column="3" />
-                            <Label Text="BackupType" TextColor="White"  Grid.Column="4" />
-                            <Label Text="LastRun" TextColor="White"  Grid.Column="5" />
+                            <Label Text="ID" TextColor="White" Grid.Column="0" />
+                            <Label Text="Nom" TextColor="White" Grid.Column="1" />
+                            <Label Text="SourcePath" TextColor="White" Grid.Column="2" />
+                            <Label Text="DestinationPath" TextColor="White" Grid.Column="3" />
+                            <Label Text="BackupType" TextColor="White" Grid.Column="4" />
+                            <Label Text="LastRun" TextColor="White" Grid.Column="5" />
                         </Grid>
                     </CollectionView.Header>
 
-                    <!-- Exemple de contenu -->
                     <CollectionView.ItemTemplate>
                         <DataTemplate>
-                            <Grid Padding="10" ColumnDefinitions="*,*,*,*,*">
-                                <Label Text="{Binding }" Grid.Column="0"/>
-                                <Label Text="{Binding }" Grid.Column="1"/>
-                                <Label Text="{Binding }" Grid.Column="2"/>
-                                <Label Text="{Binding }" Grid.Column="3"/>
-                                <Label Text="{Binding }" Grid.Column="4"/>
-                                <Label Text="{Binding }" Grid.Column="5"/>
+                            <Grid Padding="10" ColumnDefinitions="*,*,*,*,*,*">
+                                <!-- Affiche l'index via une extension de binding -->
+                                <Label Text="{Binding Source={RelativeSource AncestorType={x:Type CollectionView}}, 
+                                      Path=ItemsSource.IndexOf($data)}" 
+                       Grid.Column="0"/>
+                                <Label Text="{Binding Name}" Grid.Column="1"/>
+                                <Label Text="{Binding SourcePath}" Grid.Column="2"/>
+                                <Label Text="{Binding DestinationPath}" Grid.Column="3"/>
+                                <Label Text="{Binding Type}" Grid.Column="4"/>
+                                <Label Text="{Binding LastRun, StringFormat='{0:dd/MM/yyyy HH:mm}'}" Grid.Column="5"/>
                             </Grid>
                         </DataTemplate>
                     </CollectionView.ItemTemplate>
                 </CollectionView>
 
 
+
+
                 <StackLayout Orientation="Vertical" Grid.Column="1" Spacing="20" VerticalOptions="Center">
-                    <Button Grid.Column="3" Text="Ajouter"  MaximumWidthRequest="200" BackgroundColor="{StaticResource MainColor}" Clicked="ClickAddJobButton"/>
+                    <Button Command="{Binding OpenAddJobPopUpCommand}" Grid.Column="3" Text="Ajouter"  MaximumWidthRequest="200" BackgroundColor="{StaticResource MainColor}"/>
                     <Button Grid.Column="3" Text="Supprimer"  MaximumWidthRequest="200" BackgroundColor="{StaticResource MainColor}"/>
                     <Button Grid.Column="3" Text="Lancer 1"  MaximumWidthRequest="200" BackgroundColor="{StaticResource MainColor}"/>
                     <Button Grid.Column="3" Text="Lancer tout"  MaximumWidthRequest="200" BackgroundColor="{StaticResource MainColor}"/>
                     <Button Grid.Column="3" Text="Lancer les jobs sélectionnés"  MaximumWidthRequest="200" BackgroundColor="{StaticResource MainColor}"/>
-                    <Button Grid.Column="3" Text="Créer une sélection"  MaximumWidthRequest="200" BackgroundColor="{StaticResource MainColor}" Clicked="ClickPopUpCreateSelection"/>
+                    <Button Grid.Column="3" Text="Créer une sélection"  MaximumWidthRequest="200" BackgroundColor="{StaticResource MainColor}"/>
                 </StackLayout>
             </Grid >
         </Grid>
-        
-        <Grid x:Name="PopUpAddJob" VerticalOptions="Center" HorizontalOptions="Center" RowSpacing="25" IsVisible="False"   BackgroundColor="{StaticResource White}"  Padding="20">
+
+        <Grid x:Name="PopUpAddJob" IsVisible="{Binding IsVisibleAddJob}" VerticalOptions="Center" HorizontalOptions="Center" RowSpacing="25" BackgroundColor="{StaticResource White}"  Padding="20">
             <Grid.RowDefinitions>
                 <RowDefinition  Height="Auto"/>
                 <RowDefinition  Height="Auto"/>
@@ -89,7 +93,7 @@
                 <Entry Placeholder="Type de backup" Text="{Binding BackupType}" Background="{StaticResource SecColor}" TextColor="Black"/>
             </StackLayout>
             <StackLayout Orientation="Horizontal" Grid.Row="2" Spacing="50" HorizontalOptions="Center">
-                <Button Grid.Column="3" Text="Annuler"  MaximumWidthRequest="150" BackgroundColor="Tomato" Clicked="ClickCancelButton"/>
+                <Button Command="{Binding ClickCancelButtonCommand}" Grid.Column="3" Text="Annuler"  MaximumWidthRequest="150" BackgroundColor="Tomato"/>
                 <Button Text="Ajouter Job" Command="{Binding AddJobCommand}" Grid.Column="3" MaximumWidthRequest="150" BackgroundColor="LimeGreen"/>
             </StackLayout>
         </Grid>
@@ -132,8 +136,8 @@
             </CollectionView>
 
             <HorizontalStackLayout Spacing="50" HorizontalOptions="Center" Grid.Row="3" Grid.ColumnSpan="2">
-                <Button Text="Annuler"  MaximumWidthRequest="150" BackgroundColor="Tomato" Clicked="ClickCancelButton"/>
-                <Button Text="Confirmer"  MaximumWidthRequest="150" BackgroundColor="LimeGreen" Clicked="ClickConfirmParametersButton"/>
+                <Button Text="Annuler"  MaximumWidthRequest="150" BackgroundColor="Tomato"/>
+                <Button Text="Confirmer"  MaximumWidthRequest="150" BackgroundColor="LimeGreen"/>
             </HorizontalStackLayout>
         </Grid>
 
@@ -149,8 +153,8 @@
                 <Entry  Background="{StaticResource SecColor}" TextColor="Black" />
             </StackLayout>
             <StackLayout Orientation="Horizontal" Grid.Row="2" Spacing="50" HorizontalOptions="Center">
-                <Button Grid.Column="3" Text="Annuler"  MaximumWidthRequest="150" BackgroundColor="Tomato" Clicked="ClickCancelButton"/>
-                <Button Grid.Column="3" Text="Ajouter"  MaximumWidthRequest="150" BackgroundColor="LimeGreen" Clicked="ClickLaunchButton"/>
+                <Button Grid.Column="3" Text="Annuler"  MaximumWidthRequest="150" BackgroundColor="Tomato"/>
+                <Button Grid.Column="3" Text="Ajouter"  MaximumWidthRequest="150" BackgroundColor="LimeGreen"/>
             </StackLayout>
         </Grid>
     </Grid>

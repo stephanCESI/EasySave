@@ -32,7 +32,7 @@ namespace EasySave.Maui.Services
             _maxBackupJobs = maxBackupJobs;
 
             var settings = AppSettings.Load();
-            _logDirectory = settings.LogDirectory;
+            _logDirectory = Path.Combine(AppContext.BaseDirectory, settings.LogDirectory);
 
             _stateManager = new StateManager(_logDirectory);
 
@@ -49,7 +49,6 @@ namespace EasySave.Maui.Services
                 {
                     Directory.CreateDirectory(_logDirectory);
                 }
-
                 string jsonContent = JsonConvert.SerializeObject(_backupJobs, Formatting.Indented);
                 File.WriteAllText(filePath, jsonContent);
 

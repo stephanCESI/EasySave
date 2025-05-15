@@ -23,10 +23,14 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private string backupType;
 
+    [ObservableProperty]
+    bool isVisibleAddJob;
+
     public MainViewModel(BackupService backupService)
     {
         _backupService = backupService;
         LoadJobs();
+        IsVisibleAddJob = false;
     }
 
     public void LoadJobs()
@@ -34,6 +38,18 @@ public partial class MainViewModel : ObservableObject
         Jobs.Clear();
         foreach (var job in _backupService.GetJobs())
             Jobs.Add(job);
+    }
+
+    [RelayCommand]
+    private void OpenAddJobPopUp()
+    {
+        IsVisibleAddJob = true;
+    }
+
+    [RelayCommand]
+    private void ClickCancelButton()
+    {
+        IsVisibleAddJob = false;
     }
 
     [RelayCommand]
@@ -56,6 +72,8 @@ public partial class MainViewModel : ObservableObject
 
         // Recharge la liste après ajout
         LoadJobs();
+
+        IsVisibleAddJob = false;
 
         // Réinitialise les champs
         JobName = string.Empty;
