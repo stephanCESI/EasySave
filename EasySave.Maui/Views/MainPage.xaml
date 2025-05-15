@@ -37,7 +37,7 @@
                     <Button Grid.Column="3" Text="Supprimer"  MaximumWidthRequest="150" BackgroundColor="{StaticResource MainColor}"/>
                     <Button Grid.Column="3" Text="Lancer 1"  MaximumWidthRequest="150" BackgroundColor="{StaticResource MainColor}"/>
                     <Button Grid.Column="3" Text="Lancer tout"  MaximumWidthRequest="150" BackgroundColor="{StaticResource MainColor}"/>
-                    <Button Grid.Column="3" Text="lancer selection"  MaximumWidthRequest="150" BackgroundColor="{StaticResource MainColor}"/>
+                    <Button Grid.Column="3" Text="lancer selection"  MaximumWidthRequest="150" BackgroundColor="{StaticResource MainColor}" Clicked="ClickLaunchSelectionButton"/>
                 </StackLayout>
             </Grid >
         </Grid>
@@ -51,16 +51,33 @@
             <StackLayout Orientation="Vertical" Grid.Row="1" HorizontalOptions="Center" MinimumWidthRequest="250">
                 <Label Text="Nom"/>
                 <Entry  Background="{StaticResource SecColor}" />
-                <Label Text="Nom"/>
+                <Label Text="SourcePath"/>
                 <Entry  Background="{StaticResource SecColor}"/>
-                <Label Text="Nom"/>
+                <Label Text="DestionationPath"/>
                 <Entry  Background="{StaticResource SecColor}"/>
-                <Label Text="Nom"/>
+                <Label Text="Back"/>
                 <Entry  Background="{StaticResource SecColor}"/>
             </StackLayout>
             <StackLayout Orientation="Horizontal" Grid.Row="2" Spacing="50" HorizontalOptions="Center">
                 <Button Grid.Column="3" Text="Annuler"  MaximumWidthRequest="150" BackgroundColor="Tomato" Clicked="ClickCancelButton"/>
                 <Button Grid.Column="3" Text="Ajouter"  MaximumWidthRequest="150" BackgroundColor="LimeGreen" Clicked="ClickAddButton"/>
+            </StackLayout>
+        </Grid>
+        
+        <Grid x:Name="PopUpRunSelection" VerticalOptions="Center" HorizontalOptions="Center" RowSpacing="25" IsVisible="False"   BackgroundColor="{StaticResource White}"  Padding="20">
+            <Grid.RowDefinitions>
+                <RowDefinition  Height="Auto"/>
+                <RowDefinition  Height="Auto"/>
+                <RowDefinition  Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Label Grid.Row="0" FontSize="Title" Text="Créer lancer une sélection de jobs"  HorizontalOptions="Center"/>
+            <StackLayout Orientation="Vertical" Grid.Row="1" HorizontalOptions="Center" MinimumWidthRequest="300">
+                <Label Text="Lancer 1-2-9 ou 1;6 par exemple "/>
+                <Entry  Background="{StaticResource SecColor}" />
+            </StackLayout>
+            <StackLayout Orientation="Horizontal" Grid.Row="2" Spacing="50" HorizontalOptions="Center">
+                <Button Grid.Column="3" Text="Annuler"  MaximumWidthRequest="150" BackgroundColor="Tomato" Clicked="ClickCancelButton"/>
+                <Button Grid.Column="3" Text="Ajouter"  MaximumWidthRequest="150" BackgroundColor="LimeGreen" Clicked="ClickLaunchButton"/>
             </StackLayout>
         </Grid>
     </Grid>
