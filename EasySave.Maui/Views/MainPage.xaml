@@ -30,7 +30,11 @@
                     <ColumnDefinition Width="0.25*"/>
                     <ColumnDefinition Width="auto"/>
                 </Grid.ColumnDefinitions>
-                <CollectionView ItemsSource="{Binding Jobs}" Background="{StaticResource Gray100}">
+                <CollectionView ItemsSource="{Binding Jobs}" 
+                SelectionMode="Single" 
+                SelectedItem="{Binding SelectedJob}" 
+                Background="{StaticResource Gray100}">
+
                     <CollectionView.Header>
                         <Grid Padding="10"
               BackgroundColor="{StaticResource MainColor}"
@@ -47,26 +51,42 @@
                     <CollectionView.ItemTemplate>
                         <DataTemplate>
                             <Grid Padding="10" ColumnDefinitions="*,*,*,*,*,*">
-                                <!-- Affiche l'index via une extension de binding -->
-                                <Label Text="{Binding Source={RelativeSource AncestorType={x:Type CollectionView}}, 
-                                      Path=ItemsSource.IndexOf($data)}" 
-                       Grid.Column="0"/>
-                                <Label Text="{Binding Name}" Grid.Column="1"/>
-                                <Label Text="{Binding SourcePath}" Grid.Column="2"/>
-                                <Label Text="{Binding DestinationPath}" Grid.Column="3"/>
-                                <Label Text="{Binding Type}" Grid.Column="4"/>
-                                <Label Text="{Binding LastRun, StringFormat='{0:dd/MM/yyyy HH:mm}'}" Grid.Column="5"/>
+                                <VisualStateManager.VisualStateGroups>
+                                    <VisualStateGroup x:Name="CommonStates">
+                                        <VisualState x:Name="Normal">
+                                            <VisualState.Setters>
+                                                <Setter Property="BackgroundColor" Value="White" />
+                                            </VisualState.Setters>
+                                        </VisualState>
+                                        <VisualState x:Name="Selected">
+                                            <VisualState.Setters>
+                                                <Setter Property="BackgroundColor" Value="{StaticResource MainColor}" />
+                                            </VisualState.Setters>
+                                        </VisualState>
+                                    </VisualStateGroup>
+                                </VisualStateManager.VisualStateGroups>
+
+                                <!-- Affichage des données -->
+                                <Label Text="{Binding Name}" Grid.Column="1" TextColor="Black"/>
+                                <Label Text="{Binding SourcePath}" Grid.Column="2" TextColor="Black"/>
+                                <Label Text="{Binding DestinationPath}" Grid.Column="3" TextColor="Black"/>
+                                <Label Text="{Binding Type}" Grid.Column="4" TextColor="Black"/>
+                                <Label Text="{Binding LastRun, StringFormat='{0:dd/MM/yyyy HH:mm}'}" Grid.Column="5" TextColor="Black"/>
                             </Grid>
                         </DataTemplate>
                     </CollectionView.ItemTemplate>
                 </CollectionView>
 
 
-
-
                 <StackLayout Orientation="Vertical" Grid.Column="1" Spacing="20" VerticalOptions="Center">
                     <Button Command="{Binding OpenAddJobPopUpCommand}" Grid.Column="3" Text="Ajouter"  MaximumWidthRequest="200" BackgroundColor="{StaticResource MainColor}"/>
-                    <Button Grid.Column="3" Text="Supprimer"  MaximumWidthRequest="200" BackgroundColor="{StaticResource MainColor}"/>
+                    <Button 
+                        Text="Supprimer le job sélectionné" 
+                        Command="{Binding OpenDeleteJobPopUpCommand}" 
+                        IsEnabled="{Binding SelectedJob, Converter={StaticResource NullToBoolConverter}}"
+                        Grid.Column="3" MaximumWidthRequest="200" BackgroundColor="{StaticResource MainColor}"
+                        TextColor="White"/>
+
                     <Button Grid.Column="3" Text="Lancer 1"  MaximumWidthRequest="200" BackgroundColor="{StaticResource MainColor}"/>
                     <Button Grid.Column="3" Text="Lancer tout"  MaximumWidthRequest="200" BackgroundColor="{StaticResource MainColor}"/>
                     <Button Grid.Column="3" Text="Lancer les jobs sélectionnés"  MaximumWidthRequest="200" BackgroundColor="{StaticResource MainColor}"/>
@@ -87,17 +107,23 @@
                 <Entry Placeholder="Nom du job" Text="{Binding JobName}" Background="{StaticResource SecColor}" TextColor="Black"/>
                 <Label Text="SourcePath" TextColor="Black"/>
                 <Entry Placeholder="Chemin source" Text="{Binding SourcePath}" Background="{StaticResource SecColor}" TextColor="Black"/>
-                <Label Text="DestionationPath" TextColor="Black"/>
-                <Entry Placeholder="Chemin destination" Text="{Binding DestinationPath}" Background="{StaticResource SecColor}" TextColor="Black"/>
-                <Label Text="Back" TextColor="Black"/>
-                <Entry Placeholder="Type de backup" Text="{Binding BackupType}" Background="{StaticResource SecColor}" TextColor="Black"/>
+                <Label Text="TargetPath" TextColor="Black"/>
+                <Entry Placeholder="Chemin cible" Text="{Binding TargetPath}" Background="{StaticResource SecColor}" TextColor="Black"/>
+
+                <Picker Title="Type de backup"
+        ItemsSource="{Binding BackupTypes}"
+        SelectedItem="{Binding SelectedBackupType}"
+        Background="{StaticResource SecColor}"
+        TextColor="Black"/>
+
+
             </StackLayout>
             <StackLayout Orientation="Horizontal" Grid.Row="2" Spacing="50" HorizontalOptions="Center">
                 <Button Command="{Binding ClickCancelButtonCommand}" Grid.Column="3" Text="Annuler"  MaximumWidthRequest="150" BackgroundColor="Tomato"/>
                 <Button Text="Ajouter Job" Command="{Binding AddJobCommand}" Grid.Column="3" MaximumWidthRequest="150" BackgroundColor="LimeGreen"/>
             </StackLayout>
         </Grid>
-        
+
         <Grid x:Name="PopUpParameters" VerticalOptions="Center" HorizontalOptions="Center" 
               RowSpacing="25" IsVisible="False"   BackgroundColor="{StaticResource White}" 
               Padding="20" WidthRequest="600">
@@ -156,6 +182,18 @@
                 <Button Grid.Column="3" Text="Annuler"  MaximumWidthRequest="150" BackgroundColor="Tomato"/>
                 <Button Grid.Column="3" Text="Ajouter"  MaximumWidthRequest="150" BackgroundColor="LimeGreen"/>
             </StackLayout>
+        </Grid>
+
+        <Grid x:Name="PopUpDeleteJob" IsVisible="{Binding IsVisibleDeleteJob}" VerticalOptions="Center" HorizontalOptions="Center" RowSpacing="25" BackgroundColor="{StaticResource White}"  Padding="20">
+            <Grid.RowDefinitions>
+                <RowDefinition  Height="Auto"/>
+                <RowDefinition  Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Label Grid.Row="0" FontSize="Title" Text="{Binding SelectedJob.Name, StringFormat='Voulez-vous supprimer le job {0} ?'}" HorizontalOptions="Center" TextColor="Black"></Label>
+            <StackLayout Orientation="Horizontal" Grid.Row="1" Spacing="50" HorizontalOptions="Center">
+                <Button Text="Annuler"  MaximumWidthRequest="150" BackgroundColor="Tomato" Command="{Binding ClickCancelButtonCommand}"/>
+                <Button Text="Supprimer"  MaximumWidthRequest="150" BackgroundColor="LimeGreen" Command="{Binding DeleteSelectedJobCommand}"/>
+            </StackLayout> 
         </Grid>
     </Grid>
 </ContentPage>

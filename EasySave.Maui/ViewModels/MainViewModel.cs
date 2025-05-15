@@ -18,19 +18,28 @@ public partial class MainViewModel : ObservableObject
     private string sourcePath;
 
     [ObservableProperty]
-    private string destinationPath;
+    private string targetPath;
 
     [ObservableProperty]
-    private string backupType;
+    private BackupType selectedBackupType;
 
     [ObservableProperty]
     bool isVisibleAddJob;
+
+    [ObservableProperty]
+    bool isVisibleDeleteJob;
+
+    [ObservableProperty]
+    private BackupJob? selectedJob;
+
+    public Array BackupTypes { get; } = Enum.GetValues(typeof(BackupType));
 
     public MainViewModel(BackupService backupService)
     {
         _backupService = backupService;
         LoadJobs();
         IsVisibleAddJob = false;
+        IsVisibleDeleteJob = false;
     }
 
     public void LoadJobs()
@@ -47,38 +56,48 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private void OpenDeleteJobPopUp()
+    {
+        IsVisibleDeleteJob = true;
+    }
+
+    [RelayCommand]
     private void ClickCancelButton()
     {
         IsVisibleAddJob = false;
+        IsVisibleDeleteJob = false;
     }
 
     [RelayCommand]
     private void AddJob()
     {
         if (string.IsNullOrWhiteSpace(JobName) || string.IsNullOrWhiteSpace(SourcePath)
-           || string.IsNullOrWhiteSpace(DestinationPath) || string.IsNullOrWhiteSpace(BackupType))
+           || string.IsNullOrWhiteSpace(TargetPath))
         {
-            // Affiche un message d'erreur ou log
             return;
         }
 
-        if (!Enum.TryParse<BackupType>(BackupType, true, out var parsedType))
-        {
-            // Erreur : type invalide
-            return;
-        }
-
-        _backupService.CreateBackupJob(JobName, SourcePath, DestinationPath, parsedType);
-
-        // Recharge la liste après ajout
+        _backupService.CreateBackupJob(JobName, SourcePath, TargetPath, selectedBackupType);
         LoadJobs();
-
         IsVisibleAddJob = false;
 
-        // Réinitialise les champs
         JobName = string.Empty;
         SourcePath = string.Empty;
-        DestinationPath = string.Empty;
-        BackupType = string.Empty;
+        TargetPath = string.Empty;
+        SelectedBackupType = BackupType.Full;
+    }
+
+    [RelayCommand]
+    private void DeleteSelectedJob()
+    {
+        if (SelectedJob == null) return;
+
+        // Supprime le job dans le service
+        _backupService.DeleteBackupJobByName(SelectedJob.Name);
+
+        // Retire le job de la liste observable
+        Jobs.Remove(SelectedJob);
+        SelectedJob = null;
+        IsVisibleDeleteJob = false;
     }
 }

@@ -18,18 +18,16 @@ namespace EasySave.Maui.Services
         private readonly PerformanceTimer _timer;
         private readonly Logger _logger;
         private readonly LocalizationService _localizationService;
-        private readonly int _maxBackupJobs;
         private readonly string _logDirectory;
         private readonly StateManager _stateManager;
 
-        public BackupService(Logger logger, LocalizationService localizationService, int maxBackupJobs)
+        public BackupService(Logger logger, LocalizationService localizationService)
         {
             _backupJobs = new List<BackupJob>();
             _fileHelper = new FileHelper();
             _timer = new PerformanceTimer();
             _logger = logger;
             _localizationService = localizationService;
-            _maxBackupJobs = maxBackupJobs;
 
             var settings = AppSettings.Load();
             _logDirectory = Path.Combine(AppContext.BaseDirectory, settings.LogDirectory);
@@ -90,12 +88,7 @@ namespace EasySave.Maui.Services
 
         public void CreateBackupJob(string name, string sourcePath, string targetPath, BackupType type)
         {
-            if (_backupJobs.Count >= _maxBackupJobs)
-            {
-                System.Console.WriteLine(_localizationService.GetLocalizedString("errorMaxJobsReached"));
-                return;
-            }
-
+            
             if (_backupJobs.Any(job => job.Name.Equals(name, StringComparison.OrdinalIgnoreCase)))
             {
                 System.Console.WriteLine(_localizationService.GetLocalizedString("errorJobAlreadyExists", name));
@@ -121,6 +114,18 @@ namespace EasySave.Maui.Services
             SaveJobsToFile();
             System.Console.WriteLine(_localizationService.GetLocalizedString("jobDeleted", job.Name));
         }
+
+        public void DeleteBackupJobByName(string name)
+        {
+            var job = _backupJobs.FirstOrDefault(j => j.Name == name);
+            if (job != null)
+            {
+                _backupJobs.Remove(job);
+                SaveJobsToFile();
+                Console.WriteLine(_localizationService.GetLocalizedString("jobDeleted", name));
+            }
+        }
+
 
         public void RunBackupJobByIndex(int index)
         {

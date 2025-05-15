@@ -34,8 +34,7 @@ namespace EasySave.Maui
             builder.Services.AddSingleton(sp =>
                 new BackupService(
                     sp.GetRequiredService<Logger>(),
-                    sp.GetRequiredService<LocalizationService>(),
-                    settings.MaxBackupJobs));
+                    sp.GetRequiredService<LocalizationService>()));
 
             // Enregistrer le ViewModel
             builder.Services.AddTransient<MainViewModel>();

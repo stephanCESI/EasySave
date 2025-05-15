@@ -8,7 +8,6 @@ namespace EasySave.Maui.Utils
     {
         public string DefaultLanguage { get; set; }
         public string LogDirectory { get; set; }
-        public int MaxBackupJobs { get; set; }
         public string LogFileType { get; set; }
 
         public static AppSettings Load()
@@ -30,7 +29,6 @@ namespace EasySave.Maui.Utils
                     {
                         DefaultLanguage = "en",
                         LogDirectory = "Logs",
-                        MaxBackupJobs = 5,
                         LogFileType = "json"
                     };
                 }
@@ -42,7 +40,6 @@ namespace EasySave.Maui.Utils
                 {
                     DefaultLanguage = "en",
                     LogDirectory = "Logs",
-                    MaxBackupJobs = 5,
                     LogFileType = "json"
                 };
             }
