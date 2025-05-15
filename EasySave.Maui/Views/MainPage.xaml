@@ -29,9 +29,36 @@
                     <ColumnDefinition Width="0.25*"/>
                     <ColumnDefinition Width="auto"/>
                 </Grid.ColumnDefinitions>
-                <CollectionView Background="{StaticResource SecColor}">
+                <CollectionView Background="{StaticResource Gray100}">
+                    <CollectionView.Header>
+                        <Grid Padding="10"
+              BackgroundColor="{StaticResource MainColor}"
+              ColumnDefinitions="*,*,*,*,*,*">
+                            <Label Text="ID" TextColor="White"  Grid.Column="0" />
+                            <Label Text="Nom" TextColor="White"  Grid.Column="1" />
+                            <Label Text="SourcePath" TextColor="White"  Grid.Column="2" />
+                            <Label Text="DestinationPath" TextColor="White"  Grid.Column="3" />
+                            <Label Text="BackupType" TextColor="White"  Grid.Column="4" />
+                            <Label Text="LastRun" TextColor="White"  Grid.Column="5" />
+                        </Grid>
+                    </CollectionView.Header>
 
+                    <!-- Exemple de contenu -->
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Padding="10" ColumnDefinitions="*,*,*,*,*">
+                                <Label Text="{Binding }" Grid.Column="0"/>
+                                <Label Text="{Binding }" Grid.Column="1"/>
+                                <Label Text="{Binding }" Grid.Column="2"/>
+                                <Label Text="{Binding }" Grid.Column="3"/>
+                                <Label Text="{Binding }" Grid.Column="4"/>
+                                <Label Text="{Binding }" Grid.Column="5"/>
+                            </Grid>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
                 </CollectionView>
+
+
                 <StackLayout Orientation="Vertical" Grid.Column="1" Spacing="20" VerticalOptions="Center">
                     <Button Grid.Column="3" Text="Ajouter"  MaximumWidthRequest="200" BackgroundColor="{StaticResource MainColor}" Clicked="ClickAddJobButton"/>
                     <Button Grid.Column="3" Text="Supprimer"  MaximumWidthRequest="200" BackgroundColor="{StaticResource MainColor}"/>
@@ -53,11 +80,11 @@
             <StackLayout Orientation="Vertical" Grid.Row="1" HorizontalOptions="Center" MinimumWidthRequest="250">
                 <Label Text="Nom"/>
                 <Entry  Background="{StaticResource SecColor}" />
-                <Label Text="Nom"/>
+                <Label Text="SourcePath"/>
                 <Entry  Background="{StaticResource SecColor}"/>
-                <Label Text="Nom"/>
+                <Label Text="DestionationPath"/>
                 <Entry  Background="{StaticResource SecColor}"/>
-                <Label Text="Nom"/>
+                <Label Text="Back"/>
                 <Entry  Background="{StaticResource SecColor}"/>
             </StackLayout>
             <StackLayout Orientation="Horizontal" Grid.Row="2" Spacing="50" HorizontalOptions="Center">
@@ -107,6 +134,23 @@
                 <Button Text="Annuler"  MaximumWidthRequest="150" BackgroundColor="Tomato" Clicked="ClickCancelParametersButton"/>
                 <Button Text="Confirmer"  MaximumWidthRequest="150" BackgroundColor="LimeGreen" Clicked="ClickConfirmParametersButton"/>
             </HorizontalStackLayout>
+        </Grid>
+        
+        <Grid x:Name="PopUpRunSelection" VerticalOptions="Center" HorizontalOptions="Center" RowSpacing="25" IsVisible="False"   BackgroundColor="{StaticResource White}"  Padding="20">
+            <Grid.RowDefinitions>
+                <RowDefinition  Height="Auto"/>
+                <RowDefinition  Height="Auto"/>
+                <RowDefinition  Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Label Grid.Row="0" FontSize="Title" Text="Créer lancer une sélection de jobs"  HorizontalOptions="Center"/>
+            <StackLayout Orientation="Vertical" Grid.Row="1" HorizontalOptions="Center" MinimumWidthRequest="300">
+                <Label Text="Lancer 1-2-9 ou 1;6 par exemple "/>
+                <Entry  Background="{StaticResource SecColor}" />
+            </StackLayout>
+            <StackLayout Orientation="Horizontal" Grid.Row="2" Spacing="50" HorizontalOptions="Center">
+                <Button Grid.Column="3" Text="Annuler"  MaximumWidthRequest="150" BackgroundColor="Tomato" Clicked="ClickCancelButton"/>
+                <Button Grid.Column="3" Text="Ajouter"  MaximumWidthRequest="150" BackgroundColor="LimeGreen" Clicked="ClickLaunchButton"/>
+            </StackLayout>
         </Grid>
     </Grid>
 </ContentPage>
