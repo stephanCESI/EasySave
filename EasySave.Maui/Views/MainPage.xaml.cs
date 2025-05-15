@@ -2,8 +2,6 @@
 {
     public partial class MainPage : ContentPage
     {
-        int count = 0;
-
         public MainPage()
         {
             InitializeComponent();
@@ -26,6 +24,24 @@
         private void ClickAddButton(object sender, EventArgs e)
         {
 
+        }
+
+        private void ClickParametersButton(object sender, EventArgs e)
+        {
+            MainContent.Opacity = 0.5;
+            MainContent.BackgroundColor = Colors.Gray;
+            PopUpParameters.IsVisible = true;
+        }
+
+        private void ClickCancelParametersButton(object sender, EventArgs e)
+        {
+            MainContent.Opacity = 1;
+            MainContent.BackgroundColor = Colors.White;
+            PopUpParameters.IsVisible = false;
+        }
+
+        private void ClickConfirmParametersButton(object send, EventArgs e) { 
+        
         }
     }
 

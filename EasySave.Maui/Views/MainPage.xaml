@@ -4,7 +4,7 @@
              x:Class="EasySave.Maui.MainPage"
              >
 
-    <Grid>
+    <Grid BackgroundColor="{StaticResource White}">
         <Grid x:Name="MainContent">
             <Grid.RowDefinitions >
                 <RowDefinition Height="Auto" />
@@ -18,7 +18,7 @@
                 <StackLayout Grid.Column="2" Orientation="Horizontal" Spacing="25">
                     <Switch />
                     <Switch />
-                    <Button  Text="Parametre"  MaximumWidthRequest="150" BackgroundColor="{StaticResource MainColor}"/>
+                    <Button  Text="Paramètres"  MaximumWidthRequest="150" BackgroundColor="{StaticResource MainColor}"  Clicked="ClickParametersButton"/>
                 </StackLayout>
 
             </Grid>
@@ -33,14 +33,16 @@
 
                 </CollectionView>
                 <StackLayout Orientation="Vertical" Grid.Column="1" Spacing="20" VerticalOptions="Center">
-                    <Button Grid.Column="3" Text="Ajouter"  MaximumWidthRequest="150" BackgroundColor="{StaticResource MainColor}" Clicked="ClickAddJobButton"/>
-                    <Button Grid.Column="3" Text="Supprimer"  MaximumWidthRequest="150" BackgroundColor="{StaticResource MainColor}"/>
-                    <Button Grid.Column="3" Text="Lancer 1"  MaximumWidthRequest="150" BackgroundColor="{StaticResource MainColor}"/>
-                    <Button Grid.Column="3" Text="Lancer tout"  MaximumWidthRequest="150" BackgroundColor="{StaticResource MainColor}"/>
-                    <Button Grid.Column="3" Text="lancer selection"  MaximumWidthRequest="150" BackgroundColor="{StaticResource MainColor}"/>
+                    <Button Grid.Column="3" Text="Ajouter"  MaximumWidthRequest="200" BackgroundColor="{StaticResource MainColor}" Clicked="ClickAddJobButton"/>
+                    <Button Grid.Column="3" Text="Supprimer"  MaximumWidthRequest="200" BackgroundColor="{StaticResource MainColor}"/>
+                    <Button Grid.Column="3" Text="Lancer 1"  MaximumWidthRequest="200" BackgroundColor="{StaticResource MainColor}"/>
+                    <Button Grid.Column="3" Text="Lancer tout"  MaximumWidthRequest="200" BackgroundColor="{StaticResource MainColor}"/>
+                    <Button Grid.Column="3" Text="Lancer les jobs sélectionnés"  MaximumWidthRequest="200" BackgroundColor="{StaticResource MainColor}"/>
+                    <Button Grid.Column="3" Text="Créer une sélection"  MaximumWidthRequest="200" BackgroundColor="{StaticResource MainColor}"/>
                 </StackLayout>
             </Grid >
         </Grid>
+        
         <Grid x:Name="PopUpAddJob" VerticalOptions="Center" HorizontalOptions="Center" RowSpacing="25" IsVisible="False"   BackgroundColor="{StaticResource White}"  Padding="20">
             <Grid.RowDefinitions>
                 <RowDefinition  Height="Auto"/>
@@ -62,6 +64,49 @@
                 <Button Grid.Column="3" Text="Annuler"  MaximumWidthRequest="150" BackgroundColor="Tomato" Clicked="ClickCancelButton"/>
                 <Button Grid.Column="3" Text="Ajouter"  MaximumWidthRequest="150" BackgroundColor="LimeGreen" Clicked="ClickAddButton"/>
             </StackLayout>
+        </Grid>
+        
+        <Grid x:Name="PopUpParameters" VerticalOptions="Center" HorizontalOptions="Center" 
+              RowSpacing="25" IsVisible="False"   BackgroundColor="{StaticResource White}" 
+              Padding="20" WidthRequest="600">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="0.5*"/>
+                <ColumnDefinition Width="0.5*"/>
+            </Grid.ColumnDefinitions>
+            <Label Grid.Row="0" Text="Paramètres" TextColor="Black" Grid.ColumnSpan="2" HorizontalOptions="Center"/>
+
+            <VerticalStackLayout Grid.Row="1" Grid.Column="0">
+                <Label Text="Extensions" TextColor="Black"/>
+                <HorizontalStackLayout>
+                    <Entry WidthRequest="220" Background="{StaticResource SecColor}" />
+                    <Button BackgroundColor="{StaticResource MainColor}" Text="+"/>
+                </HorizontalStackLayout>
+            </VerticalStackLayout>
+
+            <VerticalStackLayout Grid.Row="1" Grid.Column="1">
+                <Label Text="Logiciels métier" TextColor="Black" Margin="10,0,0,0"/>
+                <HorizontalStackLayout>
+                    <Entry Margin="10,0,0,0" WidthRequest="220" Background="{StaticResource SecColor}" />
+                    <Button BackgroundColor="{StaticResource MainColor}" Text="+"/>
+                </HorizontalStackLayout>
+            </VerticalStackLayout>
+
+            <CollectionView Background="red" Grid.Row="2" Grid.Column="0" HeightRequest="100" Margin="0,0,10,0" MaximumHeightRequest="500">
+            </CollectionView>
+
+            <CollectionView Background="Chartreuse" Grid.Row="2" Grid.Column="1" HeightRequest="100" Margin="10,0,0,0" MaximumHeightRequest="500">
+            </CollectionView>
+
+            <HorizontalStackLayout Spacing="50" HorizontalOptions="Center" Grid.Row="3" Grid.ColumnSpan="2">
+                <Button Text="Annuler"  MaximumWidthRequest="150" BackgroundColor="Tomato" Clicked="ClickCancelParametersButton"/>
+                <Button Text="Confirmer"  MaximumWidthRequest="150" BackgroundColor="LimeGreen" Clicked="ClickConfirmParametersButton"/>
+            </HorizontalStackLayout>
         </Grid>
     </Grid>
 </ContentPage>
