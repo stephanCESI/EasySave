@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="EasySave.Maui.MainPage"
              xmlns:viewmodels="clr-namespace:EasySave.Maui.ViewModels"
+             x:DataType="viewmodels:MainViewModel"
              >
 
     <Grid BackgroundColor="{StaticResource White}">
@@ -29,8 +30,8 @@
                         <Switch IsToggled="{Binding IsXmlLog}"/>
                         <Label Text="Format actuel : json" TextColor="Black"/>
                     </StackLayout>
-                    
-                    <Button  Text="Paramètres"  MaximumWidthRequest="150" BackgroundColor="{StaticResource MainColor}"/>
+
+                    <Button Command="{Binding OpenParametersPopUpCommand}" Text="Paramètres"  MaximumWidthRequest="150" BackgroundColor="{StaticResource MainColor}"/>
                 </StackLayout>
 
             </Grid>
@@ -78,11 +79,14 @@
                                 </VisualStateManager.VisualStateGroups>
 
                                 <!-- Affichage des données -->
+                                <!--
                                 <Label Text="{Binding Name}" Grid.Column="1" TextColor="Black"/>
                                 <Label Text="{Binding SourcePath}" Grid.Column="2" TextColor="Black"/>
                                 <Label Text="{Binding TargetPath}" Grid.Column="3" TextColor="Black"/>
                                 <Label Text="{Binding Type}" Grid.Column="4" TextColor="Black"/>
                                 <Label Text="{Binding LastRun, StringFormat='{0:dd/MM/yyyy HH:mm}'}" Grid.Column="5" TextColor="Black"/>
+                                -->
+
                             </Grid>
                         </DataTemplate>
                     </CollectionView.ItemTemplate>
@@ -135,8 +139,8 @@
         </Grid>
 
         <Grid x:Name="PopUpParameters" VerticalOptions="Center" HorizontalOptions="Center" 
-              RowSpacing="25" IsVisible="False"   BackgroundColor="{StaticResource White}" 
-              Padding="20" WidthRequest="600">
+      RowSpacing="25" IsVisible="{Binding IsVisibleParameters}" BackgroundColor="{StaticResource White}" 
+      Padding="20" WidthRequest="600">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
@@ -152,30 +156,75 @@
             <VerticalStackLayout Grid.Row="1" Grid.Column="0">
                 <Label Text="Extensions" TextColor="Black"/>
                 <HorizontalStackLayout>
-                    <Entry WidthRequest="220" Background="{StaticResource SecColor}" />
-                    <Button BackgroundColor="{StaticResource MainColor}" Text="+"/>
+                    <Entry x:Name="ExtensionEntry" Text="{Binding NewExtension}" WidthRequest="220" Background="{StaticResource SecColor}"  TextColor="Black"/>
+                    <Button 
+                        BackgroundColor="{StaticResource MainColor}" 
+                        Text="+" 
+                        Command="{Binding AddExtensionCommand}"
+                        CommandParameter="{Binding Text, Source={x:Reference ExtensionEntry}}"/>
                 </HorizontalStackLayout>
             </VerticalStackLayout>
 
-            <VerticalStackLayout Grid.Row="1" Grid.Column="1">
-                <Label Text="Logiciels métier" TextColor="Black" Margin="10,0,0,0"/>
-                <HorizontalStackLayout>
-                    <Entry Margin="10,0,0,0" WidthRequest="220" Background="{StaticResource SecColor}" />
-                    <Button BackgroundColor="{StaticResource MainColor}" Text="+"/>
-                </HorizontalStackLayout>
-            </VerticalStackLayout>
-
-            <CollectionView Background="red" Grid.Row="2" Grid.Column="0" HeightRequest="100" Margin="0,0,10,0" MaximumHeightRequest="500">
+            <CollectionView 
+                ItemsSource="{Binding Extensions}" 
+                Grid.Row="2" 
+                Grid.Column="0" 
+                HeightRequest="100" 
+                Margin="0,0,10,0" 
+                MaximumHeightRequest="500">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <HorizontalStackLayout Spacing="10" Padding="5">
+                            <Label Text="{Binding .}" VerticalOptions="Center" TextColor="Black"/>
+                            <Button Text="X" 
+                        BackgroundColor="Tomato" 
+                        TextColor="White"
+                        Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:MainViewModel}}, Path=RemoveExtensionCommand}"
+                        CommandParameter="{Binding .}"/>
+                        </HorizontalStackLayout>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
             </CollectionView>
 
-            <CollectionView Background="Chartreuse" Grid.Row="2" Grid.Column="1" HeightRequest="100" Margin="10,0,0,0" MaximumHeightRequest="500">
+            <VerticalStackLayout Grid.Row="1" Grid.Column="1">
+                <Label Text="Logiciels métier" TextColor="Black"/>
+                <HorizontalStackLayout>
+                    <Entry x:Name="SoftwareEntry" Text="{Binding NewSoftware}" WidthRequest="220" Background="{StaticResource SecColor}"  TextColor="Black"/>
+                    <Button 
+            BackgroundColor="{StaticResource MainColor}" 
+            Text="+" 
+            Command="{Binding AddSoftwareCommand}"
+            CommandParameter="{Binding Text, Source={x:Reference SoftwareEntry}}"/>
+                </HorizontalStackLayout>
+            </VerticalStackLayout>
+
+            <CollectionView 
+                    ItemsSource="{Binding Softwares}" 
+                    Grid.Row="2" 
+                    Grid.Column="1" 
+                    HeightRequest="100" 
+                    Margin="0,0,10,0" 
+                    MaximumHeightRequest="500">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <HorizontalStackLayout Spacing="10" Padding="5">
+                            <Label Text="{Binding .}" VerticalOptions="Center" TextColor="Black"/>
+                            <Button Text="X" 
+            BackgroundColor="Tomato" 
+            TextColor="White"
+            Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:MainViewModel}}, Path=RemoveSoftwareCommand}"
+            CommandParameter="{Binding .}"/>
+                        </HorizontalStackLayout>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
             </CollectionView>
 
             <HorizontalStackLayout Spacing="50" HorizontalOptions="Center" Grid.Row="3" Grid.ColumnSpan="2">
-                <Button Text="Annuler"  MaximumWidthRequest="150" BackgroundColor="Tomato"/>
-                <Button Text="Confirmer"  MaximumWidthRequest="150" BackgroundColor="LimeGreen"/>
+                <Button Command="{Binding ClickCancelButtonCommand}" Text="Annuler"  MaximumWidthRequest="150" BackgroundColor="Tomato"/>
+                <Button Command="{Binding SaveExtensionsAndSoftwaresCommand}" Text="Confirmer"  MaximumWidthRequest="150" BackgroundColor="LimeGreen"/>
             </HorizontalStackLayout>
         </Grid>
+
 
         <Grid x:Name="PopUpCreateSelection" VerticalOptions="Center" HorizontalOptions="Center" RowSpacing="25" IsVisible="False"   BackgroundColor="{StaticResource White}"  Padding="20">
             <Grid.RowDefinitions>
