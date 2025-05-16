@@ -228,8 +228,6 @@
             </HorizontalStackLayout>
         </Grid>
 
-
-        <Grid x:Name="PopUpCreateSelection" VerticalOptions="Center" HorizontalOptions="Center" RowSpacing="25" IsVisible="False"   BackgroundColor="{StaticResource White}"  Padding="20">
         <Grid x:Name="PopUpCreateSelection" VerticalOptions="Center" HorizontalOptions="Center" RowSpacing="25" IsVisible="{Binding IsVisibleCreateSelection}"   BackgroundColor="{StaticResource White}"  Padding="20">
             <Grid.RowDefinitions>
                 <RowDefinition  Height="Auto"/>
