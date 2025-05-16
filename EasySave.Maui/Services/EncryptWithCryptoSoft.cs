@@ -6,23 +6,21 @@ namespace EasySave.Maui.Services
 {
     public class EncryptWithCryptoSoft
     {
-        private readonly string _cryptoSoftPath;
-
-        public EncryptWithCryptoSoft(string cryptoSoftPath = "cryptosoft.exe")
-        {
-            _cryptoSoftPath = cryptoSoftPath;
-        }
-
         // Méthode pour chiffrer un fichier via CryptoSoft
         public bool EncryptFile(string sourceFile, string encryptedFile)
         {
             try
             {
+                string basePath = AppContext.BaseDirectory;
+                string projectRoot = Path.Combine(basePath, "..", "..", "..", "..", "..", "..");
+                string utilsPath = Path.Combine(projectRoot, "CryptoSoft","bin", "Debug", "net8.0", "CryptoSoft.exe");
+                string fullPath = Path.GetFullPath(utilsPath);
+
                 var process = new Process
                 {
                     StartInfo = new ProcessStartInfo
                     {
-                        FileName = _cryptoSoftPath,
+                        FileName = fullPath,
                         Arguments = $"source \"{sourceFile}\" destination \"{encryptedFile}\"",
                         RedirectStandardOutput = true,
                         RedirectStandardError = true,

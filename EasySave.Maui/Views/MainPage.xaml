@@ -117,9 +117,13 @@
                         TextColor="Black"/>
                     <Button Grid.Column="3" Text="Lancer tout"  MaximumWidthRequest="200" BackgroundColor="{StaticResource MainColor}" Command="{Binding RunAllJobsCommand}"/>
                     <Button Grid.Column="3" Text="Lancer les jobs sélectionnés"  MaximumWidthRequest="200" BackgroundColor="{StaticResource MainColor}" Command="{Binding RunSelectedJobsCommand}" />
-
-
                     <Button Grid.Column="3" Text="Créer une sélection"  MaximumWidthRequest="200" BackgroundColor="{StaticResource MainColor}" Command="{Binding OpenPopUpCreateSelectionCommand}"/>
+
+                    <HorizontalStackLayout Grid.Column="3" HorizontalOptions="Center">
+                        <CheckBox IsChecked="{Binding IsCryptChecked}" Background="{StaticResource MainColor}" Color="{StaticResource MainColor}" VerticalOptions="Center"/>
+                        <Label Text="Crypter ?" TextColor="Black" VerticalOptions="Center"/>
+                    </HorizontalStackLayout>
+
                 </StackLayout>
             </Grid >
         </Grid>

@@ -54,6 +54,9 @@ public partial class MainViewModel : ObservableObject
     private string newSoftware;
 
     [ObservableProperty]
+    private bool isCryptChecked;
+
+    [ObservableProperty]
     private ObservableCollection<string> extensions = new();
 
     [ObservableProperty]
@@ -114,8 +117,6 @@ public partial class MainViewModel : ObservableObject
         IsVisibleAddJob = false;
         IsVisibleDeleteJob = false;
         IsVisibleCreateSelection = false;
-        
-
         IsVisibleParameters = false;
 
         IsFrench = LanguageHelper.GetCurrentLanguage(_localizationService) == "fr";
@@ -144,6 +145,11 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void OpenDeleteJobPopUp()
     {
+        if (SelectedJobs == null || SelectedJobs.Count == 0)
+        {
+            return;
+        }
+
         IsVisibleDeleteJob = true;
 
         SelectedJobNames = string.Join(", ", SelectedJobs.Select(job => job.Name));
@@ -201,13 +207,6 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void DeleteSelectedJobs()
     {
-        if (SelectedJobs == null || SelectedJobs.Count == 0)
-        {
-
-            IsVisibleDeleteJob = false;
-            return;
-        }
-
         foreach (var job in SelectedJobs.ToList()) // Créer une copie pour éviter les erreurs de modification
         {
             _backupService.DeleteBackupJobByName(job.Name);
@@ -223,11 +222,47 @@ public partial class MainViewModel : ObservableObject
         if (SelectedJobs == null || SelectedJobs.Count == 0)
             return;
 
-        foreach (var job in SelectedJobs.ToList()) // copie pour éviter modification pendant itération
+        foreach (var job in SelectedJobs.ToList())
         {
-            _backupService.RunBackupJob(job);
+            if (IsCryptChecked)
+            {
+                var cryptoService = new EncryptWithCryptoSoft();
+
+                foreach (var file in Directory.GetFiles(job.SourcePath))
+                {
+                    string encryptedFile = Path.Combine(job.TargetPath, Path.GetFileName(file));
+
+                    bool success = cryptoService.EncryptFile(file, encryptedFile);
+
+                    if (success)
+                    {
+                        Console.WriteLine($"Fichier chiffré avec succès : {file} -> {encryptedFile}");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Échec du chiffrement du fichier : {file}");
+                    }
+                }
+            }
+            else
+            {
+                foreach (var file in Directory.GetFiles(job.SourcePath))
+                {
+                    string destinationFile = Path.Combine(job.TargetPath, Path.GetFileName(file));
+                    try
+                    {
+                        File.Copy(file, destinationFile, true);
+                        Console.WriteLine($"Fichier copié : {file} -> {destinationFile}");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Erreur lors de la copie de {file} : {ex.Message}");
+                    }
+                }
+            }
         }
     }
+
 
     [RelayCommand]
     private void RunAllJobs()
