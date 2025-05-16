@@ -112,152 +112,164 @@
             </Grid >
         </Grid>
 
-        <Grid x:Name="PopUpAddJob" IsVisible="{Binding IsVisibleAddJob}" VerticalOptions="Center" HorizontalOptions="Center" RowSpacing="25" BackgroundColor="{StaticResource White}"  Padding="20">
-            <Grid.RowDefinitions>
-                <RowDefinition  Height="Auto"/>
-                <RowDefinition  Height="Auto"/>
-                <RowDefinition  Height="Auto"/>
-            </Grid.RowDefinitions>
-            <Label Grid.Row="0" FontSize="Title" Text="Ajouter un JOB"  HorizontalOptions="Center" TextColor="Black"/>
-            <StackLayout Orientation="Vertical" Grid.Row="1" HorizontalOptions="Center" MinimumWidthRequest="250">
-                <Label Text="Nom" TextColor="Black"/>
-                <Entry Placeholder="Nom du job" Text="{Binding JobName}" Background="{StaticResource SecColor}" TextColor="Black"/>
-                <Label Text="SourcePath" TextColor="Black"/>
-                <Entry Placeholder="Chemin source" Text="{Binding SourcePath}" Background="{StaticResource SecColor}" TextColor="Black"/>
-                <Label Text="TargetPath" TextColor="Black"/>
-                <Entry Placeholder="Chemin cible" Text="{Binding TargetPath}" Background="{StaticResource SecColor}" TextColor="Black"/>
+        <Grid   x:Name="PopUpAddJob" IsVisible="{Binding IsVisibleAddJob}">
+            <Grid BackgroundColor="Black"  Opacity="0.5" ></Grid>
+            <Grid  VerticalOptions="Center" HorizontalOptions="Center" RowSpacing="25" BackgroundColor="{StaticResource White}"  Padding="20">
+                <Grid.RowDefinitions>
+                    <RowDefinition  Height="Auto"/>
+                    <RowDefinition  Height="Auto"/>
+                    <RowDefinition  Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Label Grid.Row="0" FontSize="Title" Text="Ajouter un JOB"  HorizontalOptions="Center" TextColor="Black"/>
+                <StackLayout Orientation="Vertical" Grid.Row="1" HorizontalOptions="Center" MinimumWidthRequest="250">
+                    <Label Text="Nom" TextColor="Black"/>
+                    <Entry Placeholder="Nom du job" Text="{Binding JobName}" Background="{StaticResource SecColor}" TextColor="Black"/>
+                    <Label Text="SourcePath" TextColor="Black"/>
+                    <Entry Placeholder="Chemin source" Text="{Binding SourcePath}" Background="{StaticResource SecColor}" TextColor="Black"/>
+                    <Label Text="TargetPath" TextColor="Black"/>
+                    <Entry Placeholder="Chemin cible" Text="{Binding TargetPath}" Background="{StaticResource SecColor}" TextColor="Black"/>
 
-                <Picker Title="Type de backup"
+                    <Picker Title="Type de backup"
         ItemsSource="{Binding BackupTypes}"
         SelectedItem="{Binding SelectedBackupType}"
         Background="{StaticResource SecColor}"
         TextColor="Black"/>
 
 
-            </StackLayout>
-            <StackLayout Orientation="Horizontal" Grid.Row="2" Spacing="50" HorizontalOptions="Center">
-                <Button Command="{Binding ClickCancelButtonCommand}" Grid.Column="3" Text="Annuler"  MaximumWidthRequest="150" BackgroundColor="Tomato"/>
-                <Button Text="Ajouter Job" Command="{Binding AddJobCommand}" Grid.Column="3" MaximumWidthRequest="150" BackgroundColor="LimeGreen"/>
-            </StackLayout>
+                </StackLayout>
+                <StackLayout Orientation="Horizontal" Grid.Row="2" Spacing="50" HorizontalOptions="Center">
+                    <Button Command="{Binding ClickCancelButtonCommand}" Grid.Column="3" Text="Annuler"  MaximumWidthRequest="150" BackgroundColor="Tomato"/>
+                    <Button Text="Ajouter Job" Command="{Binding AddJobCommand}" Grid.Column="3" MaximumWidthRequest="150" BackgroundColor="LimeGreen"/>
+                </StackLayout>
+            </Grid>
         </Grid>
 
-        <Grid x:Name="PopUpParameters" VerticalOptions="Center" HorizontalOptions="Center" 
-      RowSpacing="25" IsVisible="{Binding IsVisibleParameters}" BackgroundColor="{StaticResource White}" 
+        <Grid  x:Name="PopUpParameters" IsVisible="{Binding IsVisibleParameters}" >
+            <Grid BackgroundColor="Black"  Opacity="0.5" ></Grid>
+            <Grid  VerticalOptions="Center" HorizontalOptions="Center" 
+      RowSpacing="25"  BackgroundColor="{StaticResource White}" 
       Padding="20" WidthRequest="600">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="0.5*"/>
-                <ColumnDefinition Width="0.5*"/>
-            </Grid.ColumnDefinitions>
-            <Label Grid.Row="0" Text="Paramètres" TextColor="Black" Grid.ColumnSpan="2" HorizontalOptions="Center"/>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="0.5*"/>
+                    <ColumnDefinition Width="0.5*"/>
+                </Grid.ColumnDefinitions>
+                <Label Grid.Row="0" Text="Paramètres" TextColor="Black" Grid.ColumnSpan="2" HorizontalOptions="Center"/>
 
-            <VerticalStackLayout Grid.Row="1" Grid.Column="0">
-                <Label Text="Extensions" TextColor="Black"/>
-                <HorizontalStackLayout>
-                    <Entry x:Name="ExtensionEntry" Text="{Binding NewExtension}" WidthRequest="220" Background="{StaticResource SecColor}"  TextColor="Black"/>
-                    <Button 
+                <VerticalStackLayout Grid.Row="1" Grid.Column="0">
+                    <Label Text="Extensions" TextColor="Black"/>
+                    <HorizontalStackLayout>
+                        <Entry x:Name="ExtensionEntry" Text="{Binding NewExtension}" WidthRequest="220" Background="{StaticResource SecColor}"  TextColor="Black"/>
+                        <Button 
                         BackgroundColor="{StaticResource MainColor}" 
                         Text="+" 
                         Command="{Binding AddExtensionCommand}"
                         CommandParameter="{Binding Text, Source={x:Reference ExtensionEntry}}"/>
-                </HorizontalStackLayout>
-            </VerticalStackLayout>
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
 
-            <CollectionView 
+                <CollectionView 
                 ItemsSource="{Binding Extensions}" 
                 Grid.Row="2" 
                 Grid.Column="0" 
                 HeightRequest="100" 
                 Margin="0,0,10,0" 
                 MaximumHeightRequest="500">
-                <CollectionView.ItemTemplate>
-                    <DataTemplate>
-                        <HorizontalStackLayout Spacing="10" Padding="5">
-                            <Label Text="{Binding .}" VerticalOptions="Center" TextColor="Black"/>
-                            <Button Text="X" 
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <HorizontalStackLayout Spacing="10" Padding="5">
+                                <Label Text="{Binding .}" VerticalOptions="Center" TextColor="Black"/>
+                                <Button Text="X" 
                         BackgroundColor="Tomato" 
                         TextColor="White"
                         Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:MainViewModel}}, Path=RemoveExtensionCommand}"
                         CommandParameter="{Binding .}"/>
-                        </HorizontalStackLayout>
-                    </DataTemplate>
-                </CollectionView.ItemTemplate>
-            </CollectionView>
+                            </HorizontalStackLayout>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
 
-            <VerticalStackLayout Grid.Row="1" Grid.Column="1">
-                <Label Text="Logiciels métier" TextColor="Black"/>
-                <HorizontalStackLayout>
-                    <Entry x:Name="SoftwareEntry" Text="{Binding NewSoftware}" WidthRequest="220" Background="{StaticResource SecColor}"  TextColor="Black"/>
-                    <Button 
+                <VerticalStackLayout Grid.Row="1" Grid.Column="1">
+                    <Label Text="Logiciels métier" TextColor="Black"/>
+                    <HorizontalStackLayout>
+                        <Entry x:Name="SoftwareEntry" Text="{Binding NewSoftware}" WidthRequest="220" Background="{StaticResource SecColor}"  TextColor="Black"/>
+                        <Button 
             BackgroundColor="{StaticResource MainColor}" 
             Text="+" 
             Command="{Binding AddSoftwareCommand}"
             CommandParameter="{Binding Text, Source={x:Reference SoftwareEntry}}"/>
-                </HorizontalStackLayout>
-            </VerticalStackLayout>
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
 
-            <CollectionView 
+                <CollectionView 
                     ItemsSource="{Binding Softwares}" 
                     Grid.Row="2" 
                     Grid.Column="1" 
                     HeightRequest="100" 
                     Margin="0,0,10,0" 
                     MaximumHeightRequest="500">
-                <CollectionView.ItemTemplate>
-                    <DataTemplate>
-                        <HorizontalStackLayout Spacing="10" Padding="5">
-                            <Label Text="{Binding .}" VerticalOptions="Center" TextColor="Black"/>
-                            <Button Text="X" 
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <HorizontalStackLayout Spacing="10" Padding="5">
+                                <Label Text="{Binding .}" VerticalOptions="Center" TextColor="Black"/>
+                                <Button Text="X" 
             BackgroundColor="Tomato" 
             TextColor="White"
             Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:MainViewModel}}, Path=RemoveSoftwareCommand}"
             CommandParameter="{Binding .}"/>
-                        </HorizontalStackLayout>
-                    </DataTemplate>
-                </CollectionView.ItemTemplate>
-            </CollectionView>
+                            </HorizontalStackLayout>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
 
-            <HorizontalStackLayout Spacing="50" HorizontalOptions="Center" Grid.Row="3" Grid.ColumnSpan="2">
-                <Button Command="{Binding ClickCancelButtonCommand}" Text="Annuler"  MaximumWidthRequest="150" BackgroundColor="Tomato"/>
-                <Button Command="{Binding SaveExtensionsAndSoftwaresCommand}" Text="Confirmer"  MaximumWidthRequest="150" BackgroundColor="LimeGreen"/>
-            </HorizontalStackLayout>
+                <HorizontalStackLayout Spacing="50" HorizontalOptions="Center" Grid.Row="3" Grid.ColumnSpan="2">
+                    <Button Command="{Binding ClickCancelButtonCommand}" Text="Annuler"  MaximumWidthRequest="150" BackgroundColor="Tomato"/>
+                    <Button Command="{Binding SaveExtensionsAndSoftwaresCommand}" Text="Confirmer"  MaximumWidthRequest="150" BackgroundColor="LimeGreen"/>
+                </HorizontalStackLayout>
+            </Grid>
         </Grid>
 
-        <Grid x:Name="PopUpCreateSelection" VerticalOptions="Center" HorizontalOptions="Center" RowSpacing="25" IsVisible="{Binding IsVisibleCreateSelection}"   BackgroundColor="{StaticResource White}"  Padding="20">
-            <Grid.RowDefinitions>
-                <RowDefinition  Height="Auto"/>
-                <RowDefinition  Height="Auto"/>
-                <RowDefinition  Height="Auto"/>
-            </Grid.RowDefinitions>
-            <Label Grid.Row="0" FontSize="Title" Text="Créer et lancer une sélection de jobs"  HorizontalOptions="Center" TextColor="Black"/>
-            <StackLayout Orientation="Vertical" Grid.Row="1" HorizontalOptions="Center" MinimumWidthRequest="300">
-                <Label Text="Lancer 1-2-9 ou 1;6 par exemple " TextColor="Black"/>
-                <Entry  Background="{StaticResource SecColor}" TextColor="Black" Text="{Binding SelectedJobsText}"/>
-            </StackLayout>
-            <StackLayout Orientation="Horizontal" Grid.Row="2" Spacing="50" HorizontalOptions="Center">
-                <Button Grid.Column="3" Text="Annuler"  MaximumWidthRequest="150" BackgroundColor="Tomato" Command="{Binding ClickCancelButtonCommand}"/>
-                <Button Grid.Column="3" Text="Ajouter"  MaximumWidthRequest="150" BackgroundColor="LimeGreen" Command="{Binding CreateSelectionJobsCommand}"/>
-            </StackLayout>
+        <Grid   x:Name="PopUpCreateSelection" IsVisible="{Binding IsVisibleCreateSelection}" >
+            <Grid BackgroundColor="Black"  Opacity="0.5" ></Grid>
+            <Grid  VerticalOptions="Center" HorizontalOptions="Center" RowSpacing="25"   BackgroundColor="{StaticResource White}"  Padding="20">
+                <Grid.RowDefinitions>
+                    <RowDefinition  Height="*"/>
+                    <RowDefinition  Height="Auto"/>
+                    <RowDefinition  Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Label Grid.Row="0" FontSize="Title" Text="Créer et lancer une sélection de jobs"  HorizontalOptions="Center" TextColor="Black"/>
+                <StackLayout Orientation="Vertical" Grid.Row="1" HorizontalOptions="Center" MinimumWidthRequest="300">
+                    <Label Text="Lancer 1-2-9 ou 1;6 par exemple " TextColor="Black"/>
+                    <Entry  Background="{StaticResource SecColor}" TextColor="Black" Text="{Binding SelectedJobsText}"/>
+                </StackLayout>
+                <StackLayout Orientation="Horizontal" Grid.Row="2" Spacing="50" HorizontalOptions="Center">
+                    <Button Grid.Column="3" Text="Annuler"  MaximumWidthRequest="150" BackgroundColor="Tomato" Command="{Binding ClickCancelButtonCommand}"/>
+                    <Button Grid.Column="3" Text="Ajouter"  MaximumWidthRequest="150" BackgroundColor="LimeGreen" Command="{Binding CreateSelectionJobsCommand}"/>
+                </StackLayout>
+            </Grid>
         </Grid>
 
-        <Grid x:Name="PopUpDeleteJob" IsVisible="{Binding IsVisibleDeleteJob}" VerticalOptions="Center" HorizontalOptions="Center" RowSpacing="25" BackgroundColor="{StaticResource White}"  Padding="20">
-            <Grid.RowDefinitions>
-                <RowDefinition  Height="Auto"/>
-                <RowDefinition  Height="Auto"/>
-            </Grid.RowDefinitions>
-            <Label Grid.Row="0" FontSize="Title" 
+        <Grid  x:Name="PopUpDeleteJob" IsVisible="{Binding IsVisibleDeleteJob}" >
+            <Grid BackgroundColor="Black"  Opacity="0.5" ></Grid>
+            <Grid  VerticalOptions="Center" HorizontalOptions="Center" RowSpacing="25" BackgroundColor="{StaticResource White}"  Padding="20">
+                <Grid.RowDefinitions>
+                    <RowDefinition  Height="Auto"/>
+                    <RowDefinition  Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Label Grid.Row="0" FontSize="Title" 
        Text="{Binding SelectedJobNames, StringFormat='Voulez-vous supprimer les jobs : {0} ?'}" 
        HorizontalOptions="Center" 
        TextColor="Black"/>
-            <StackLayout Orientation="Horizontal" Grid.Row="1" Spacing="50" HorizontalOptions="Center">
-                <Button Text="Annuler"  MaximumWidthRequest="150" BackgroundColor="Tomato" Command="{Binding ClickCancelButtonCommand}"/>
-                <Button Text="Supprimer"  MaximumWidthRequest="150" BackgroundColor="LimeGreen" Command="{Binding DeleteSelectedJobsCommand}"/>
-            </StackLayout>
+                <StackLayout Orientation="Horizontal" Grid.Row="1" Spacing="50" HorizontalOptions="Center">
+                    <Button Text="Annuler"  MaximumWidthRequest="150" BackgroundColor="Tomato" Command="{Binding ClickCancelButtonCommand}"/>
+                    <Button Text="Supprimer"  MaximumWidthRequest="150" BackgroundColor="LimeGreen" Command="{Binding DeleteSelectedJobsCommand}"/>
+                </StackLayout>
+            </Grid>
         </Grid>
     </Grid>
 </ContentPage>
