@@ -79,15 +79,15 @@ public partial class MainViewModel : ObservableObject
         {
             if (SetProperty(ref _isXmlLog, value))
             {
-                // Met à jour le type de log dans le fichier de configuration
                 var logFileType = _isXmlLog ? "xml" : "json";
                 AppSettingsHelper.SetLogFileType(logFileType);
+                OnPropertyChanged(nameof(CurrentLogFormat));  // Notifie le changement de format
                 Console.WriteLine($"LogFileType mis à jour : {logFileType}");
             }
         }
     }
 
-    
+    public string CurrentLogFormat => IsXmlLog ? "xml" : "json";
 
     private void UpdateTexts()
     {

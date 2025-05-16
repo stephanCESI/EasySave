@@ -35,7 +35,7 @@
                     <StackLayout>
                         <Label Text="Changer le format de log" FontSize="Medium" TextColor="Black"/>
                         <Switch IsToggled="{Binding IsXmlLog}"/>
-                        <Label Text="Format actuel : json" TextColor="Black"/>
+                        <Label Text="{Binding CurrentLogFormat, StringFormat='Format actuel : {0}'}" TextColor="Black"/>
                     </StackLayout>
 
                     <Button Command="{Binding OpenParametersPopUpCommand}" Text="Paramètres"  MaximumWidthRequest="150" BackgroundColor="{StaticResource MainColor}"/>
