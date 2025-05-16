@@ -104,7 +104,7 @@
                     <Button Grid.Column="3" Text="Lancer les jobs sélectionnés"  MaximumWidthRequest="200" BackgroundColor="{StaticResource MainColor}" Command="{Binding RunSelectedJobsCommand}" />
 
 
-                    <Button Grid.Column="3" Text="Créer une sélection"  MaximumWidthRequest="200" BackgroundColor="{StaticResource MainColor}"/>
+                    <Button Grid.Column="3" Text="Créer une sélection"  MaximumWidthRequest="200" BackgroundColor="{StaticResource MainColor}" Command="{Binding OpenPopUpCreateSelectionCommand}"/>
                 </StackLayout>
             </Grid >
         </Grid>
@@ -225,8 +225,7 @@
             </HorizontalStackLayout>
         </Grid>
 
-
-        <Grid x:Name="PopUpCreateSelection" VerticalOptions="Center" HorizontalOptions="Center" RowSpacing="25" IsVisible="False"   BackgroundColor="{StaticResource White}"  Padding="20">
+        <Grid x:Name="PopUpCreateSelection" VerticalOptions="Center" HorizontalOptions="Center" RowSpacing="25" IsVisible="{Binding IsVisibleCreateSelection}"   BackgroundColor="{StaticResource White}"  Padding="20">
             <Grid.RowDefinitions>
                 <RowDefinition  Height="Auto"/>
                 <RowDefinition  Height="Auto"/>
@@ -235,11 +234,11 @@
             <Label Grid.Row="0" FontSize="Title" Text="Créer et lancer une sélection de jobs"  HorizontalOptions="Center" TextColor="Black"/>
             <StackLayout Orientation="Vertical" Grid.Row="1" HorizontalOptions="Center" MinimumWidthRequest="300">
                 <Label Text="Lancer 1-2-9 ou 1;6 par exemple " TextColor="Black"/>
-                <Entry  Background="{StaticResource SecColor}" TextColor="Black" />
+                <Entry  Background="{StaticResource SecColor}" TextColor="Black" Text="{Binding SelectedJobsText}"/>
             </StackLayout>
             <StackLayout Orientation="Horizontal" Grid.Row="2" Spacing="50" HorizontalOptions="Center">
-                <Button Grid.Column="3" Text="Annuler"  MaximumWidthRequest="150" BackgroundColor="Tomato"/>
-                <Button Grid.Column="3" Text="Ajouter"  MaximumWidthRequest="150" BackgroundColor="LimeGreen"/>
+                <Button Grid.Column="3" Text="Annuler"  MaximumWidthRequest="150" BackgroundColor="Tomato" Command="{Binding ClickCancelButtonCommand}"/>
+                <Button Grid.Column="3" Text="Ajouter"  MaximumWidthRequest="150" BackgroundColor="LimeGreen" Command="{Binding CreateSelectionJobsCommand}"/>
             </StackLayout>
         </Grid>
 

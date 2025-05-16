@@ -36,6 +36,12 @@ public partial class MainViewModel : ObservableObject
     bool isVisibleParameters;
 
     [ObservableProperty]
+    bool isVisibleCreateSelection;
+
+    [ObservableProperty]
+    string selectedJobsText;
+
+    [ObservableProperty]
     private bool isFrench;
 
     [ObservableProperty]
@@ -81,6 +87,7 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
+    
 
     private void UpdateTexts()
     {
@@ -106,6 +113,9 @@ public partial class MainViewModel : ObservableObject
         LoadExtensionsAndSoftwares();
         IsVisibleAddJob = false;
         IsVisibleDeleteJob = false;
+        IsVisibleCreateSelection = false;
+        
+
         IsVisibleParameters = false;
 
         IsFrench = LanguageHelper.GetCurrentLanguage(_localizationService) == "fr";
@@ -140,6 +150,14 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private void OpenPopUpCreateSelection()
+    {
+        IsVisibleCreateSelection = true;
+
+
+    }
+
+    [RelayCommand]
     private void OpenParametersPopUp()
     {
         IsVisibleParameters = true;
@@ -151,6 +169,9 @@ public partial class MainViewModel : ObservableObject
         IsVisibleAddJob = false;
         IsVisibleDeleteJob = false;
         IsVisibleParameters = false;
+        IsVisibleCreateSelection = false;
+
+
     }
 
     [RelayCommand]
@@ -304,4 +325,46 @@ public partial class MainViewModel : ObservableObject
         LoadExtensions();
         LoadSoftwares();
     }
+    [RelayCommand]
+    private void CreateSelectionJobs()
+    {
+        var selectedJobs = new List<int>();
+
+        if (string.IsNullOrWhiteSpace(SelectedJobsText))
+            return;
+
+        var cleanedText = SelectedJobsText.Replace(" ", "");
+
+        var parts = cleanedText.Split('-');
+
+        foreach (var part in parts)
+        {
+            if (part.Contains(";"))
+            {
+                var range = part.Split(';');
+                if (range.Length == 2 &&
+                    int.TryParse(range[0], out int start) &&
+                    int.TryParse(range[1], out int end))
+                {
+                    for (int i = start; i <= end; i++)
+                        selectedJobs.Add(i);
+                }
+            }
+            else if (int.TryParse(part, out int number))
+            {
+                
+                selectedJobs.Add(number);
+            }
+            
+        }
+
+        foreach (var job in selectedJobs)
+        {
+            _backupService.RunBackupJobByIndex(job);
+        }
+
+        IsVisibleCreateSelection = false;
+        SelectedJobsText = "" ;
+    }
+
 }
