@@ -9,6 +9,8 @@ namespace EasySave.Maui.Utils
         public string DefaultLanguage { get; set; }
         public string LogDirectory { get; set; }
         public string LogFileType { get; set; }
+        public List<string> EncryptExtensions { get; set; }
+        public List<string> Softwares { get; set; }
 
         public static AppSettings Load()
         {
@@ -31,7 +33,9 @@ namespace EasySave.Maui.Utils
                     {
                         DefaultLanguage = "en",
                         LogDirectory = "Logs",
-                        LogFileType = "json"
+                        LogFileType = "json",
+                        EncryptExtensions = [],
+                        Softwares = []
                     };
                 }
             }
@@ -42,7 +46,9 @@ namespace EasySave.Maui.Utils
                 {
                     DefaultLanguage = "en",
                     LogDirectory = "Logs",
-                    LogFileType = "json"
+                    LogFileType = "json",
+                    EncryptExtensions = [],
+                    Softwares = []
                 };
             }
         }

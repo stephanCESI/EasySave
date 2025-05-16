@@ -40,4 +40,64 @@ public static class AppSettingsHelper
         return settings.LogFileType;
     }
 
+    private static void Save(AppSettings settings)
+    {
+        try
+        {
+            if (!File.Exists(SettingsFilePath))
+            {
+                Console.WriteLine($"Le fichier de configuration '{SettingsFilePath}' est introuvable.");
+                return;
+            }
+
+            var json = File.ReadAllText(SettingsFilePath);
+            var configData = JsonConvert.DeserializeObject<Dictionary<string, object>>(json);
+
+            if (configData != null)
+            {
+                configData["EncryptExtensions"] = settings.EncryptExtensions;
+                configData["Softwares"] = settings.Softwares;
+
+                string updatedJson = JsonConvert.SerializeObject(configData, Formatting.Indented);
+                File.WriteAllText(SettingsFilePath, updatedJson);
+            }
+            else
+            {
+                Console.WriteLine("Erreur lors de la désérialisation du fichier de configuration.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors de la sauvegarde des paramètres : {ex.Message}");
+        }
+    }
+
+
+
+    public static void SetEncryptExtensions(List<string> extensions)
+    {
+        var settings = AppSettings.Load();
+        settings.EncryptExtensions = extensions;
+        Save(settings);
+    }
+
+    public static List<string> GetEncryptExtensions()
+    {
+        var settings = AppSettings.Load();
+        return settings.EncryptExtensions ?? new List<string>();
+    }
+
+    public static void SetSoftwares(List<string> softwares)
+    {
+        var settings = AppSettings.Load();
+        settings.Softwares = softwares;
+        Save(settings);
+    }
+
+    public static List<string> GetSoftwares()
+    {
+        var settings = AppSettings.Load();
+        return settings.Softwares ?? new List<string>();
+    }
+
 }

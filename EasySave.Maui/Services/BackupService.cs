@@ -125,7 +125,6 @@ namespace EasySave.Maui.Services
             }
         }
 
-
         public void RunBackupJobByIndex(int index)
         {
             if (index < 0 || index >= _backupJobs.Count)

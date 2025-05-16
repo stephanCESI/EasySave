@@ -39,10 +39,25 @@ public partial class MainViewModel : ObservableObject
     string selectedJobsText;
 
     [ObservableProperty]
+    bool isVisibleParameters;
+
+    [ObservableProperty]
     private bool isFrench;
 
     [ObservableProperty]
     private string addButtonText;
+
+    [ObservableProperty]
+    private string newExtension;
+
+    [ObservableProperty]
+    private string newSoftware;
+
+    [ObservableProperty]
+    private ObservableCollection<string> extensions = new();
+
+    [ObservableProperty]
+    private ObservableCollection<string> softwares = new();
 
     [ObservableProperty]
     private ObservableCollection<BackupJob> selectedJobs = new();
@@ -95,16 +110,22 @@ public partial class MainViewModel : ObservableObject
         _backupService = backupService;
         _localizationService = localizationService;
         LoadJobs();
+        LoadExtensionsAndSoftwares();
         IsVisibleAddJob = false;
         IsVisibleDeleteJob = false;
         IsVisibleCreateSelection = false;
         
+
+        IsVisibleParameters = false;
 
         IsFrench = LanguageHelper.GetCurrentLanguage(_localizationService) == "fr";
         UpdateTexts();
 
         var logFileType = AppSettingsHelper.GetLogFileType();
         IsXmlLog = logFileType.Equals("xml", StringComparison.OrdinalIgnoreCase);
+
+        var settings = AppSettings.Load();
+        Extensions = new ObservableCollection<string>(settings.EncryptExtensions);
     }
 
     public void LoadJobs()
@@ -137,6 +158,12 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private void OpenParametersPopUp()
+    {
+        IsVisibleParameters = true;
+    }
+
+    [RelayCommand]
     private void ClickCancelButton()
     {
         IsVisibleAddJob = false;
@@ -144,6 +171,7 @@ public partial class MainViewModel : ObservableObject
         IsVisibleCreateSelection = false;
 
 
+        IsVisibleParameters = false;
     }
 
     [RelayCommand]
@@ -261,4 +289,82 @@ public partial class MainViewModel : ObservableObject
         SelectedJobsText = "" ;
     }
 
+    [RelayCommand]
+    private void AddExtension(string extension)
+    {
+        if (!string.IsNullOrWhiteSpace(extension) && !Extensions.Contains(extension))
+        {
+            if (!extension.StartsWith("."))
+            {
+                extension = "."+extension;
+            }
+            Extensions.Add(extension);
+            NewExtension = string.Empty;
+        }
+    }
+
+    [RelayCommand]
+    private void RemoveExtension(string extension)
+    {
+        if (Extensions.Contains(extension))
+        {
+            Extensions.Remove(extension);
+        }
+    }
+
+    [RelayCommand]
+    private void AddSoftware(string software)
+    {
+        if (!string.IsNullOrWhiteSpace(software) && !Softwares.Contains(software))
+        {
+            Softwares.Add(software);
+            NewSoftware = string.Empty;
+        }
+    }
+
+    [RelayCommand]
+    private void RemoveSoftware(string software)
+    {
+        if (Softwares.Contains(software))
+        {
+            Softwares.Remove(software);
+        }
+    }
+
+    [RelayCommand]
+    private void SaveExtensionsAndSoftwares()
+    {
+        SaveExtensions();
+        SaveSoftwares();
+    }
+
+    private void SaveExtensions()
+    {
+        AppSettingsHelper.SetEncryptExtensions([.. Extensions]);
+        IsVisibleParameters = false;
+    }
+
+    private void SaveSoftwares()
+    {
+        AppSettingsHelper.SetSoftwares([.. Softwares]);
+        IsVisibleParameters = false;
+    }
+
+    private void LoadExtensions()
+    {
+        var savedExtensions = AppSettingsHelper.GetEncryptExtensions();
+        Extensions = new ObservableCollection<string>(savedExtensions);
+    }
+
+    private void LoadSoftwares()
+    {
+        var savedSoftwares = AppSettingsHelper.GetSoftwares();
+        Softwares = new ObservableCollection<string>(savedSoftwares);
+    }
+
+    private void LoadExtensionsAndSoftwares()
+    {
+        LoadExtensions();
+        LoadSoftwares();
+    }
 }
