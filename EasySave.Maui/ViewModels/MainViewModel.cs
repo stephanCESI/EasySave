@@ -224,44 +224,22 @@ public partial class MainViewModel : ObservableObject
 
         foreach (var job in SelectedJobs.ToList())
         {
+            _backupService.RunBackupJob(job);
+
             if (IsCryptChecked)
             {
                 var cryptoService = new EncryptWithCryptoSoft();
 
-                foreach (var file in Directory.GetFiles(job.SourcePath))
+                foreach (var file in Directory.GetFiles(job.TargetPath))
                 {
                     string encryptedFile = Path.Combine(job.TargetPath, Path.GetFileName(file));
 
-                    bool success = cryptoService.EncryptFile(file, encryptedFile);
-
-                    if (success)
-                    {
-                        Console.WriteLine($"Fichier chiffré avec succès : {file} -> {encryptedFile}");
-                    }
-                    else
-                    {
-                        Console.WriteLine($"Échec du chiffrement du fichier : {file}");
-                    }
-                }
-            }
-            else
-            {
-                foreach (var file in Directory.GetFiles(job.SourcePath))
-                {
-                    string destinationFile = Path.Combine(job.TargetPath, Path.GetFileName(file));
-                    try
-                    {
-                        File.Copy(file, destinationFile, true);
-                        Console.WriteLine($"Fichier copié : {file} -> {destinationFile}");
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"Erreur lors de la copie de {file} : {ex.Message}");
-                    }
+                    cryptoService.EncryptFile(file, encryptedFile);
                 }
             }
         }
     }
+
 
 
     [RelayCommand]
