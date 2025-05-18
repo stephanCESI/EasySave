@@ -50,11 +50,10 @@ namespace EasySave.Maui.Services
                 string jsonContent = JsonConvert.SerializeObject(_backupJobs, Formatting.Indented);
                 File.WriteAllText(filePath, jsonContent);
 
-                System.Console.WriteLine(_localizationService.GetLocalizedString("jobsSaved", filePath));
             }
             catch (Exception ex)
             {
-                System.Console.WriteLine(_localizationService.GetLocalizedString("addJobError")+ ex.Message);
+                System.Console.WriteLine(ex.Message);
             }
         }
 
@@ -75,14 +74,10 @@ namespace EasySave.Maui.Services
                         _backupJobs.AddRange(loadedJobs);
                     }
                 }
-                else
-                {
-                    System.Console.WriteLine(_localizationService.GetLocalizedString("noJobsFoundNewFile"));
-                }
             }
             catch (Exception ex)
             {
-                System.Console.WriteLine(_localizationService.GetLocalizedString("errorLoadJobs") + ex.Message);
+                System.Console.WriteLine(ex.Message);
             }
         }
 
@@ -91,28 +86,24 @@ namespace EasySave.Maui.Services
             
             if (_backupJobs.Any(job => job.Name.Equals(name, StringComparison.OrdinalIgnoreCase)))
             {
-                System.Console.WriteLine(_localizationService.GetLocalizedString("errorJobAlreadyExists", name));
                 return;
             }
 
             var newJob = new BackupJob(name, sourcePath, targetPath, type);
             _backupJobs.Add(newJob);
             SaveJobsToFile();
-            System.Console.WriteLine(_localizationService.GetLocalizedString("jobCreated", name));
         }
 
         public void DeleteBackupJobByIndex(int index)
         {
             if (index < 0 || index >= _backupJobs.Count)
             {
-                System.Console.WriteLine(_localizationService.GetLocalizedString("errorJobIndexOutOfRange"));
                 return;
             }
 
             var job = _backupJobs[index];
             _backupJobs.RemoveAt(index);
             SaveJobsToFile();
-            System.Console.WriteLine(_localizationService.GetLocalizedString("jobDeleted", job.Name));
         }
 
         public void DeleteBackupJobByName(string name)
@@ -129,12 +120,10 @@ namespace EasySave.Maui.Services
         {
             if (index < 0 || index >= _backupJobs.Count)
             {
-                System.Console.WriteLine(_localizationService.GetLocalizedString("errorJobIndexOutOfRange"));
                 return;
             }
 
             var job = _backupJobs[index];
-            System.Console.WriteLine(_localizationService.GetLocalizedString("backupStarted", job.Name));
             job.IsActive = true;
             job.LastRun = DateTime.Now;
 
@@ -146,7 +135,6 @@ namespace EasySave.Maui.Services
         {
             if (job == null) return;
 
-            System.Console.WriteLine(_localizationService.GetLocalizedString("backupStarted", job.Name));
             job.IsActive = true;
             job.LastRun = DateTime.Now;
 
@@ -161,7 +149,6 @@ namespace EasySave.Maui.Services
         {
             if (!_backupJobs.Any())
             {
-                System.Console.WriteLine(_localizationService.GetLocalizedString("noJobsFound"));
                 return;
             }
 
@@ -169,7 +156,6 @@ namespace EasySave.Maui.Services
 
             foreach (var job in _backupJobs)
             {
-                System.Console.WriteLine($"{index}. {_localizationService.GetLocalizedString("jobListItem", job.Name, job.SourcePath, job.TargetPath, job.Type, job.IsActive)}");
                 System.Console.WriteLine();
                 index++;
             }
@@ -185,18 +171,15 @@ namespace EasySave.Maui.Services
         {
             try
             {
-                System.Console.WriteLine(_localizationService.GetLocalizedString("backupStartedInfo", job.Name));
 
                 if (!Directory.Exists(job.SourcePath))
                 {
-                    System.Console.WriteLine(_localizationService.GetLocalizedString("errorSourceDirectoryNotFound", job.SourcePath));
                     return;
                 }
 
                 if (!Directory.Exists(job.TargetPath))
                 {
                     Directory.CreateDirectory(job.TargetPath);
-                    System.Console.WriteLine(_localizationService.GetLocalizedString("infoTargetDirectoryCreated", job.TargetPath));
                 }
 
                 var settings = AppSettings.Load();
@@ -275,11 +258,10 @@ namespace EasySave.Maui.Services
 
                         _logger.LogBackupAction(job.Name, file, destinationFile, fileSize, transferTime, encryptionTime, jobStopped);
 
-                        System.Console.WriteLine(_localizationService.GetLocalizedString("fileBackedUp", file, destinationFile, fileSize, transferTime));
                     }
                     catch (Exception ex)
                     {
-                        System.Console.WriteLine(_localizationService.GetLocalizedString("errorFileCopy", file, ex.Message));
+                        System.Console.WriteLine(ex.Message));
                     }
 
                     double progression = (double)processedFiles / totalFiles * 100;
@@ -289,7 +271,6 @@ namespace EasySave.Maui.Services
                     _stateManager.UpdateState(state);
                 }
 
-                System.Console.WriteLine(_localizationService.GetLocalizedString("backupCompletedInfo", job.Name, processedFiles, totalFiles, copiedSize));
 
                 state.State = "END";
                 state.Progression = 100;
@@ -299,7 +280,7 @@ namespace EasySave.Maui.Services
             }
             catch (Exception ex)
             {
-                System.Console.WriteLine(_localizationService.GetLocalizedString("errorBackupFailed", ex.Message));
+                System.Console.WriteLine(ex.Message));
             }
         }
 
