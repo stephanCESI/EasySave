@@ -222,42 +222,75 @@ public partial class MainViewModel : ObservableObject
         if (SelectedJobs == null || SelectedJobs.Count == 0)
             return;
 
+        var settings = AppSettings.Load();
+        var encryptExtensions = settings.EncryptExtensions?.Select(e => e.ToLower()).ToList() ?? new List<string>();
+
         foreach (var job in SelectedJobs.ToList())
         {
             _backupService.RunBackupJob(job);
 
-            if (IsCryptChecked)
+            if (IsCryptChecked && encryptExtensions.Any())
             {
                 var cryptoService = new EncryptWithCryptoSoft();
 
                 foreach (var file in Directory.GetFiles(job.TargetPath))
                 {
-                    string encryptedFile = Path.Combine(job.TargetPath, Path.GetFileName(file));
+                    string fileExtension = Path.GetExtension(file).ToLower();
 
-                    cryptoService.EncryptFile(file, encryptedFile);
+                    if (encryptExtensions.Contains(fileExtension))
+                    {
+                        string encryptedFile = Path.Combine(job.TargetPath, Path.GetFileName(file));
+                        cryptoService.EncryptFile(file, encryptedFile);
+                        Console.WriteLine($"Fichier chiffré : {file} -> {encryptedFile}");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Fichier ignoré (extension non prise en charge) : {file}");
+                    }
+                }
+            }
+        }
+    }
+
+    [RelayCommand]
+    private void RunAllJobs()
+    {
+        var settings = AppSettings.Load();
+        var encryptExtensions = settings.EncryptExtensions?.Select(e => e.ToLower()).ToList() ?? new List<string>();
+
+        foreach (var job in Jobs)
+        {
+            _backupService.RunBackupJob(job);
+
+            if (IsCryptChecked && encryptExtensions.Any())
+            {
+                var cryptoService = new EncryptWithCryptoSoft();
+
+                foreach (var file in Directory.GetFiles(job.TargetPath))
+                {
+                    string fileExtension = Path.GetExtension(file).ToLower();
+
+                    if (encryptExtensions.Contains(fileExtension))
+                    {
+                        string encryptedFile = Path.Combine(job.TargetPath, Path.GetFileName(file));
+                        cryptoService.EncryptFile(file, encryptedFile);
+                        Console.WriteLine($"Fichier chiffré : {file} -> {encryptedFile}");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Fichier ignoré (extension non prise en charge) : {file}");
+                    }
                 }
             }
         }
     }
 
 
-
-    [RelayCommand]
-    private void RunAllJobs()
-    {
-        foreach (var job in Jobs)
-        {
-            _backupService.RunBackupJob(job);
-        }
-    }
-
     [RelayCommand]
     private void ToggleLogFileType(bool isXml)
     {
         var logFileType = isXml ? "xml" : "json";
         AppSettingsHelper.SetLogFileType(logFileType);
-
-        // Si besoin, tu peux aussi recharger le logger ici avec la nouvelle config
     }
 
     [RelayCommand]
