@@ -125,7 +125,7 @@ namespace EasySave.Maui.Services
             }
         }
 
-        public void RunBackupJobByIndex(int index)
+        public void RunBackupJobByIndex(int index, bool IsCryptChecked)
         {
             if (index < 0 || index >= _backupJobs.Count)
             {
@@ -138,11 +138,11 @@ namespace EasySave.Maui.Services
             job.IsActive = true;
             job.LastRun = DateTime.Now;
 
-            PerformBackup(job);
+            PerformBackup(job, IsCryptChecked);
             job.IsActive = false;
         }
 
-        public void RunBackupJob(BackupJob job)
+        public void RunBackupJob(BackupJob job, bool IsCryptChecked)
         {
             if (job == null) return;
 
@@ -150,7 +150,7 @@ namespace EasySave.Maui.Services
             job.IsActive = true;
             job.LastRun = DateTime.Now;
 
-            PerformBackup(job);
+            PerformBackup(job, IsCryptChecked);
 
             job.IsActive = false;
         }
@@ -181,7 +181,7 @@ namespace EasySave.Maui.Services
         }
 
 
-        private void PerformBackup(BackupJob job)
+        private void PerformBackup(BackupJob job, bool IsCryptChecked)
         {
             try
             {
@@ -198,6 +198,10 @@ namespace EasySave.Maui.Services
                     Directory.CreateDirectory(job.TargetPath);
                     System.Console.WriteLine(_localizationService.GetLocalizedString("infoTargetDirectoryCreated", job.TargetPath));
                 }
+
+                var settings = AppSettings.Load();
+                var encryptExtensions = settings.EncryptExtensions?.Select(e => e.ToLower()).ToList() ?? new List<string>();
+                var cryptoService = new EncryptWithCryptoSoft();
 
                 string[] files = Directory.GetFiles(job.SourcePath, "*.*", SearchOption.AllDirectories);
                 int totalFiles = files.Length;
@@ -240,8 +244,34 @@ namespace EasySave.Maui.Services
                         long fileSize = new FileInfo(file).Length;
                         copiedSize += fileSize;
                         processedFiles++;
-                        double encryptionTime = 0; // CHANGER
-                        bool jobStopped = false; // CHANGER
+                        double encryptionTime = 0;
+                        bool jobStopped = false;
+
+                        if (IsCryptChecked && encryptExtensions.Contains(Path.GetExtension(file).ToLower()))
+                        {
+                            try
+                            {
+                                var encryptionTimer = System.Diagnostics.Stopwatch.StartNew();
+                                bool success = cryptoService.EncryptFile(destinationFile, destinationFile);
+                                encryptionTimer.Stop();
+
+                                if (success)
+                                {
+                                    encryptionTime = encryptionTimer.Elapsed.TotalMilliseconds;
+                                    System.Console.WriteLine($"Fichier chiffré : {file} -> {destinationFile} (en {encryptionTime} ms)");
+                                }
+                                else
+                                {
+                                    encryptionTime = -1;
+                                    System.Console.WriteLine($"Échec du chiffrement du fichier : {file}");
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                encryptionTime = -1;
+                                System.Console.WriteLine($"Erreur lors du chiffrement du fichier {file} : {ex.Message}");
+                            }
+                        }
 
                         _logger.LogBackupAction(job.Name, file, destinationFile, fileSize, transferTime, encryptionTime, jobStopped);
 
@@ -272,6 +302,7 @@ namespace EasySave.Maui.Services
                 System.Console.WriteLine(_localizationService.GetLocalizedString("errorBackupFailed", ex.Message));
             }
         }
+
 
     }
 }

@@ -84,7 +84,7 @@ public partial class MainViewModel : ObservableObject
             {
                 var logFileType = _isXmlLog ? "xml" : "json";
                 AppSettingsHelper.SetLogFileType(logFileType);
-                OnPropertyChanged(nameof(CurrentLogFormat));  // Notifie le changement de format
+                OnPropertyChanged(nameof(CurrentLogFormat));
                 Console.WriteLine($"LogFileType mis à jour : {logFileType}");
             }
         }
@@ -189,7 +189,6 @@ public partial class MainViewModel : ObservableObject
             return;
         }
 
-        // Nettoyer les chemins en enlevant les guillemets superflus
         var cleanedSourcePath = SourcePath.Trim('"');
         var cleanedTargetPath = TargetPath.Trim('"');
 
@@ -207,7 +206,7 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void DeleteSelectedJobs()
     {
-        foreach (var job in SelectedJobs.ToList()) // Créer une copie pour éviter les erreurs de modification
+        foreach (var job in SelectedJobs.ToList())
         {
             _backupService.DeleteBackupJobByName(job.Name);
             Jobs.Remove(job);
@@ -222,69 +221,23 @@ public partial class MainViewModel : ObservableObject
         if (SelectedJobs == null || SelectedJobs.Count == 0)
             return;
 
-        var settings = AppSettings.Load();
-        var encryptExtensions = settings.EncryptExtensions?.Select(e => e.ToLower()).ToList() ?? new List<string>();
-
         foreach (var job in SelectedJobs.ToList())
         {
-            _backupService.RunBackupJob(job);
-
-            if (IsCryptChecked && encryptExtensions.Any())
-            {
-                var cryptoService = new EncryptWithCryptoSoft();
-
-                foreach (var file in Directory.GetFiles(job.TargetPath))
-                {
-                    string fileExtension = Path.GetExtension(file).ToLower();
-
-                    if (encryptExtensions.Contains(fileExtension))
-                    {
-                        string encryptedFile = Path.Combine(job.TargetPath, Path.GetFileName(file));
-                        cryptoService.EncryptFile(file, encryptedFile);
-                        Console.WriteLine($"Fichier chiffré : {file} -> {encryptedFile}");
-                    }
-                    else
-                    {
-                        Console.WriteLine($"Fichier ignoré (extension non prise en charge) : {file}");
-                    }
-                }
-            }
+            _backupService.RunBackupJob(job, IsCryptChecked);
         }
     }
 
     [RelayCommand]
     private void RunAllJobs()
     {
-        var settings = AppSettings.Load();
-        var encryptExtensions = settings.EncryptExtensions?.Select(e => e.ToLower()).ToList() ?? new List<string>();
+        if (Jobs == null || Jobs.Count == 0)
+            return;
 
         foreach (var job in Jobs)
         {
-            _backupService.RunBackupJob(job);
-
-            if (IsCryptChecked && encryptExtensions.Any())
-            {
-                var cryptoService = new EncryptWithCryptoSoft();
-
-                foreach (var file in Directory.GetFiles(job.TargetPath))
-                {
-                    string fileExtension = Path.GetExtension(file).ToLower();
-
-                    if (encryptExtensions.Contains(fileExtension))
-                    {
-                        string encryptedFile = Path.Combine(job.TargetPath, Path.GetFileName(file));
-                        cryptoService.EncryptFile(file, encryptedFile);
-                        Console.WriteLine($"Fichier chiffré : {file} -> {encryptedFile}");
-                    }
-                    else
-                    {
-                        Console.WriteLine($"Fichier ignoré (extension non prise en charge) : {file}");
-                    }
-                }
-            }
+            _backupService.RunBackupJob(job, IsCryptChecked);
         }
     }
-
 
     [RelayCommand]
     private void ToggleLogFileType(bool isXml)
@@ -328,7 +281,7 @@ public partial class MainViewModel : ObservableObject
 
         foreach (var job in selectedJobs)
         {
-            _backupService.RunBackupJobByIndex(job);
+            _backupService.RunBackupJobByIndex(job, IsCryptChecked);
         }
 
         IsVisibleCreateSelection = false;
