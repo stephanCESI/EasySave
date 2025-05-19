@@ -114,7 +114,7 @@
                         Text="Supprimer le job sélectionné" 
                         Command="{Binding OpenDeleteJobPopUpCommand}"
                         Grid.Column="3" MaximumWidthRequest="200" BackgroundColor="{StaticResource MainColor}"
-                        TextColor="Black"/>
+                        />
                     <Button Grid.Column="3" Text="Lancer tout"  MaximumWidthRequest="200" BackgroundColor="{StaticResource MainColor}" Command="{Binding RunAllJobsCommand}"/>
                     <Button Grid.Column="3" Text="Lancer les jobs sélectionnés"  MaximumWidthRequest="200" BackgroundColor="{StaticResource MainColor}" Command="{Binding RunSelectedJobsCommand}" />
                     <Button Grid.Column="3" Text="Créer une sélection"  MaximumWidthRequest="200" BackgroundColor="{StaticResource MainColor}" Command="{Binding OpenPopUpCreateSelectionCommand}"/>
@@ -265,7 +265,7 @@
                 </StackLayout>
                 <StackLayout Orientation="Horizontal" Grid.Row="2" Spacing="50" HorizontalOptions="Center">
                     <Button Grid.Column="3" Text="Annuler"  MaximumWidthRequest="150" BackgroundColor="Tomato" Command="{Binding ClickCancelButtonCommand}"/>
-                    <Button Grid.Column="3" Text="Ajouter"  MaximumWidthRequest="150" BackgroundColor="LimeGreen" Command="{Binding CreateSelectionJobsCommand}"/>
+                    <Button Grid.Column="3" Text="Lancer"  MaximumWidthRequest="150" BackgroundColor="LimeGreen" Command="{Binding CreateSelectionJobsCommand}"/>
                 </StackLayout>
             </Grid>
         </Grid>
