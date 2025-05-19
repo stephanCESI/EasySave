@@ -9,6 +9,7 @@ using EasySave.Maui.Utils;
 using EasySave.Maui.Logging;
 using EasySave.Maui.Localizations;
 using System.Data;
+using System.Security.Cryptography;
 
 namespace EasySave.Maui.Services
 {
@@ -86,7 +87,7 @@ namespace EasySave.Maui.Services
 
         public void CreateBackupJob(string name, string sourcePath, string targetPath, BackupType type)
         {
-            
+
             if (_backupJobs.Any(job => job.Name.Equals(name, StringComparison.OrdinalIgnoreCase)))
             {
                 return;
@@ -195,12 +196,25 @@ namespace EasySave.Maui.Services
             return _backupJobs.AsReadOnly();
         }
 
+        private static bool CompareFileHashes(string file1Path, string file2Path)
+        {
+            using var sha256 = SHA256.Create();
+            byte[] hash1;
+            byte[] hash2;
+
+            using (var stream1 = File.OpenRead(file1Path))
+                hash1 = sha256.ComputeHash(stream1);
+
+            using (var stream2 = File.OpenRead(file2Path))
+                hash2 = sha256.ComputeHash(stream2);
+
+            return hash1.SequenceEqual(hash2);
+        }
 
         private void PerformBackup(BackupJob job, bool IsCryptChecked)
         {
             try
             {
-
                 if (!Directory.Exists(job.SourcePath))
                 {
                     return;
@@ -238,26 +252,31 @@ namespace EasySave.Maui.Services
                 {
                     string relativePath = Path.GetRelativePath(job.SourcePath, file);
                     string destinationFile = Path.Combine(job.TargetPath, relativePath);
-
-                    if (job.Type == BackupType.Differential &&
-                        File.Exists(destinationFile) &&
-                        File.GetLastWriteTime(file) <= File.GetLastWriteTime(destinationFile))
-                    {
-                        continue;
-                    }
+                    double transferTime = 0;
+                    double encryptionTime = 0;
+                    bool jobStopped = false;
+                    long fileSize = new FileInfo(file).Length;
 
                     try
                     {
-                        _timer.Start();
-                        _fileHelper.CopyFile(file, destinationFile);
-                        _timer.Stop();
+                        if (job.Type == BackupType.Differential &&
+                            File.Exists(destinationFile) &&
+                            CompareFileHashes(file, destinationFile) &&
+                            new FileInfo(file).Length == new FileInfo(destinationFile).Length)
+                        {
+                            System.Console.WriteLine($"Fichier inchangé : {file}");
+                        }
+                        else
+                        {
+                            _timer.Start();
+                            _fileHelper.CopyFile(file, destinationFile);
+                            _timer.Stop();
+                            transferTime = _timer.GetElapsedMilliseconds();
+                            copiedSize += fileSize;
+                            processedFiles++;
 
-                        double transferTime = _timer.GetElapsedMilliseconds();
-                        long fileSize = new FileInfo(file).Length;
-                        copiedSize += fileSize;
-                        processedFiles++;
-                        double encryptionTime = 0;
-                        bool jobStopped = false;
+                            System.Console.WriteLine($"Fichier copié : {file} -> {destinationFile} (en {transferTime} ms)");
+                        }
 
                         if (IsCryptChecked && encryptExtensions.Contains(Path.GetExtension(file).ToLower()))
                         {
@@ -286,11 +305,10 @@ namespace EasySave.Maui.Services
                         }
 
                         _logger.LogBackupAction(job.Name, file, destinationFile, fileSize, transferTime, encryptionTime, jobStopped);
-
                     }
                     catch (Exception ex)
                     {
-                        System.Console.WriteLine(ex.Message);
+                        System.Console.WriteLine($"Erreur de traitement du fichier {file} : {ex.Message}");
                     }
 
                     double progression = (double)processedFiles / totalFiles * 100;
@@ -300,15 +318,16 @@ namespace EasySave.Maui.Services
                     _stateManager.UpdateState(state);
                 }
 
-
                 state.State = "END";
                 state.Progression = 100;
                 _stateManager.UpdateState(state);
             }
             catch (Exception ex)
             {
-                System.Console.WriteLine(ex.Message);
+                System.Console.WriteLine($"Erreur lors de la sauvegarde : {ex.Message}");
             }
         }
+
+
     }
 }
