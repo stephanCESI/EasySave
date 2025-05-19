@@ -15,7 +15,6 @@ using CommunityToolkit.Maui.Core;
 using CommunityToolkit.Maui.Alerts;
 
 
-
 namespace EasySave.Maui.Services
 {
     public class BackupService : IBackupService
@@ -110,8 +109,6 @@ namespace EasySave.Maui.Services
                 Toast.Make(ex.Message, ToastDuration.Short).Show();
             }
         }
-
-            
 
         public void DeleteBackupJobByIndex(int index)
         {
