@@ -5,6 +5,9 @@ using EasySave.Maui.Models;
 using EasySave.Maui.Services;
 using EasySave.Maui.Utils;
 using System.Collections.ObjectModel;
+using CommunityToolkit.Maui.Alerts;
+using CommunityToolkit.Maui.Core;
+
 
 namespace EasySave.Maui.ViewModels;
 public partial class MainViewModel : ObservableObject
@@ -212,6 +215,7 @@ public partial class MainViewModel : ObservableObject
     private void OpenAddJobPopUp()
     {
         IsVisibleAddJob = true;
+        
     }
 
     [RelayCommand]
@@ -322,6 +326,7 @@ public partial class MainViewModel : ObservableObject
     private void CreateSelectionJobs()
     {
         var selectedJobs = new List<int>();
+
 
         if (string.IsNullOrWhiteSpace(SelectedJobsText))
             return;

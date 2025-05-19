@@ -11,6 +11,11 @@ using EasySave.Maui.Localizations;
 using System.Data;
 using System.Security.Cryptography;
 using System.Text;
+using CommunityToolkit.Maui.Core;
+using CommunityToolkit.Maui.Alerts;
+
+
+
 
 namespace EasySave.Maui.Services
 {
@@ -88,72 +93,119 @@ namespace EasySave.Maui.Services
 
         public void CreateBackupJob(string name, string sourcePath, string targetPath, BackupType type)
         {
-
-            if (_backupJobs.Any(job => job.Name.Equals(name, StringComparison.OrdinalIgnoreCase)))
+            try
             {
-                return;
+                if (_backupJobs.Any(job => job.Name.Equals(name, StringComparison.OrdinalIgnoreCase)))
+                {
+                    return;
+                }
+
+                var newJob = new BackupJob(name, sourcePath, targetPath, type);
+                _backupJobs.Add(newJob);
+                SaveJobsToFile();
+                Toast.Make($"Le job {newJob.Name} a été ajouté avec succès.", ToastDuration.Short).Show();
             }
 
-            var newJob = new BackupJob(name, sourcePath, targetPath, type);
-            _backupJobs.Add(newJob);
-            SaveJobsToFile();
+            catch (Exception ex)
+            {
+                Toast.Make(ex.Message, ToastDuration.Short).Show();
+            }
         }
+
+            
 
         public void DeleteBackupJobByIndex(int index)
         {
-            if (index < 0 || index >= _backupJobs.Count)
+            try
             {
-                return;
-            }
+                if (index < 0 || index >= _backupJobs.Count)
+                {
+                    return;
+                }
 
-            var job = _backupJobs[index];
-            _backupJobs.RemoveAt(index);
-            SaveJobsToFile();
+                var job = _backupJobs[index];
+                _backupJobs.RemoveAt(index);
+                SaveJobsToFile();
+                Toast.Make($"Le job {job.Name} a été supprimé avec succès.", ToastDuration.Short).Show();
+            }
+            catch (Exception ex)
+            {
+                Toast.Make(ex.Message, ToastDuration.Short).Show();
+            }
+            
         }
 
         public void DeleteBackupJobByName(string name)
         {
-            var job = _backupJobs.FirstOrDefault(j => j.Name == name);
-            if (job != null)
+            try
             {
-                _backupJobs.Remove(job);
-                SaveJobsToFile();
+                var job = _backupJobs.FirstOrDefault(j => j.Name == name);
+                if (job != null)
+                {
+                    _backupJobs.Remove(job);
+                    SaveJobsToFile();
+                    Toast.Make($"Le job {job.Name} a été supprimé avec succès.", ToastDuration.Short).Show();
+                }
             }
+            catch (Exception ex )
+            {
+                Toast.Make(ex.Message, ToastDuration.Short).Show();
+            }
+            
         }
 
         public void RunBackupJobByIndex(int index, bool IsCryptChecked)
         {
-            if (index < 0 || index >= _backupJobs.Count)
+            try
             {
-                return;
+                if (index < 0 || index >= _backupJobs.Count)
+                {
+                    Toast.Make($"Le job avec n° {index} est inexistant", ToastDuration.Short).Show();
+                    return;
+                }
+
+
+                var job = _backupJobs[index];
+                job.IsActive = true;
+                job.LastRun = DateTime.Now;
+                UpdateState(job);
+
+                PerformBackup(job, IsCryptChecked);
+                job.IsActive = false;
+                UpdateState(job);
+
+                LoadJobsFromFile();
+                Toast.Make($"Le job {job.Name} a été réalisé avec succès.", ToastDuration.Short).Show();
             }
-
-            var job = _backupJobs[index];
-            job.IsActive = true;
-            job.LastRun = DateTime.Now;
-            UpdateState(job);
-
-            PerformBackup(job, IsCryptChecked);
-            job.IsActive = false;
-            UpdateState(job);
-
-            LoadJobsFromFile();
+            catch(Exception ex)
+            {
+                Toast.Make(ex.Message, ToastDuration.Short).Show();
+            }
         }
 
         public void RunBackupJob(BackupJob job, bool IsCryptChecked)
         {
-            if (job == null) return;
+            try
+            {
+                if (job == null) return;
 
-            job.IsActive = true;
-            job.LastRun = DateTime.Now;
+                job.IsActive = true;
+                job.LastRun = DateTime.Now;
 
-            PerformBackup(job, IsCryptChecked);
-            UpdateState(job);
+                PerformBackup(job, IsCryptChecked);
+                UpdateState(job);
 
-            job.IsActive = false;
-            UpdateState(job);
+                job.IsActive = false;
+                UpdateState(job);
 
-            LoadJobsFromFile();
+                LoadJobsFromFile();
+                Toast.Make($"Le job {job.Name} a été réalisé avec succès.", ToastDuration.Short).Show();
+            }
+            catch (Exception ex)
+            {
+                Toast.Make(ex.Message, ToastDuration.Short).Show();
+            }
+            
         }
 
         public void UpdateState(BackupJob newJob)
@@ -172,7 +224,7 @@ namespace EasySave.Maui.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Erreur lors de la sauvegarde de l'état : {ex.Message}");
+                Toast.Make(ex.Message, ToastDuration.Short).Show();
             }
         }
 
@@ -311,7 +363,7 @@ namespace EasySave.Maui.Services
                     }
                     catch (Exception ex)
                     {
-                        System.Console.WriteLine($"Erreur lors de la sauvegarde du fichier {file} : {ex.Message}");
+                        Toast.Make(ex.Message, ToastDuration.Short).Show();
                     }
 
                     double progression = (double)processedFiles / totalFiles * 100;

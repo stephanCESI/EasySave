@@ -4,6 +4,7 @@ using EasySave.Maui.Services;
 using EasySave.Maui.Utils;
 using EasySave.Maui.ViewModels;
 using Microsoft.Extensions.Logging;
+using CommunityToolkit.Maui;
 
 namespace EasySave.Maui
 {
@@ -14,6 +15,7 @@ namespace EasySave.Maui
             var builder = MauiApp.CreateBuilder();
             builder
                 .UseMauiApp<App>()
+                .UseMauiCommunityToolkit()
                 .ConfigureFonts(fonts =>
                 {
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
