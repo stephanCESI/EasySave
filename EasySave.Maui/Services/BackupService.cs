@@ -16,7 +16,6 @@ using CommunityToolkit.Maui.Alerts;
 
 
 
-
 namespace EasySave.Maui.Services
 {
     public class BackupService : IBackupService
@@ -344,18 +343,20 @@ namespace EasySave.Maui.Services
                                 if (success)
                                 {
                                     encryptionTime = encryptionTimer.Elapsed.TotalMilliseconds;
-                                    System.Console.WriteLine($"Fichier chiffré : {file} -> {destinationFile}");
+                                    Toast.Make($"Fichier chiffré : {file} -> {destinationFile} (en {encryptionTime} ms)", ToastDuration.Short).Show();
+                                    
                                 }
                                 else
                                 {
                                     encryptionTime = -1;
-                                    System.Console.WriteLine($"Échec du chiffrement du fichier : {file}");
+                                    Toast.Make($"Échec du chiffrement du fichier : {file}", ToastDuration.Short).Show();
                                 }
                             }
                             catch (Exception ex)
                             {
                                 encryptionTime = -1;
-                                System.Console.WriteLine($"Erreur lors du chiffrement du fichier {file} : {ex.Message}");
+                                Toast.Make($"Erreur lors du chiffrement du fichier {file} : {ex.Message}", ToastDuration.Short).Show();
+                                
                             }
                         }
 
