@@ -301,6 +301,7 @@ namespace EasySave.Maui.Services
                     long fileSize = new FileInfo(file).Length;
                     bool shouldEncrypt = IsCryptChecked && encryptExtensions.Contains(Path.GetExtension(file).ToLower());
                     bool sourceEncrypted = IsFileEncrypted(file);
+                    double encryptionTime = 0;
 
                     try
                     {
@@ -372,11 +373,13 @@ namespace EasySave.Maui.Services
                     state.Progression = progression;
 
                     _stateManager.UpdateState(state);
+                    _logger.LogBackupAction(job.Name, job.SourcePath, job.TargetPath, fileSize, _timer.GetElapsedMilliseconds(), encryptionTime, false);
                 }
 
                 state.State = "END";
                 state.Progression = 100;
                 _stateManager.UpdateState(state);
+
             }
             catch (Exception ex)
             {
