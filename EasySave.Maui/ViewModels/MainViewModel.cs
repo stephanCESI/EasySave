@@ -9,6 +9,7 @@ using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Maui.Core;
 
 
+
 namespace EasySave.Maui.ViewModels;
 public partial class MainViewModel : ObservableObject
 {
@@ -85,6 +86,9 @@ public partial class MainViewModel : ObservableObject
                 var logFileType = _isXmlLog ? "xml" : "json";
                 AppSettingsHelper.SetLogFileType(logFileType);
                 OnPropertyChanged(nameof(CurrentLogFormat));
+                Toast.Make($"LogFileType mis à jour : {logFileType}", ToastDuration.Short).Show();
+
+                
             }
         }
     }
@@ -178,6 +182,9 @@ public partial class MainViewModel : ObservableObject
         _localizationService.SetLanguage(language);
         UpdateTexts();
         OnPropertyChanged(nameof(IsFrench));
+        
+        Toast.Make($"Langue : {(value ? "Français" : "Anglais")}", ToastDuration.Short).Show();
+
     }
 
     [ObservableProperty]
@@ -262,8 +269,12 @@ public partial class MainViewModel : ObservableObject
         if (string.IsNullOrWhiteSpace(JobName) || string.IsNullOrWhiteSpace(SourcePath)
            || string.IsNullOrWhiteSpace(TargetPath))
         {
+            Toast.Make($"Certain champs sont vide", ToastDuration.Short).Show();
             return;
+
         }
+        
+        
 
         var cleanedSourcePath = SourcePath.Trim('"');
         var cleanedTargetPath = TargetPath.Trim('"');
@@ -320,6 +331,8 @@ public partial class MainViewModel : ObservableObject
     {
         var logFileType = isXml ? "xml" : "json";
         AppSettingsHelper.SetLogFileType(logFileType);
+        Toast.Make($"Fichier de type {(isXml ? "XML" : "JSON")}", ToastDuration.Short).Show();
+
     }
 
     [RelayCommand]
