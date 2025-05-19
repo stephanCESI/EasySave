@@ -12,7 +12,7 @@
     "destinationPathJob": "Chemin Cible",
     "backupTypeJob": "Type",
     "lastRunJob": "Dernière utilisation",
-    "softwares": "Logiciels métier",
+    "softwares": "Logiciels métier (nom du processus)",
     "cancel": "Annuler",
     "confirm": "Confirmer",
     "createSelectionText": "Créer et lancer la sélection",

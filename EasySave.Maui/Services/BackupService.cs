@@ -13,6 +13,7 @@ using System.Security.Cryptography;
 using System.Text;
 using CommunityToolkit.Maui.Core;
 using CommunityToolkit.Maui.Alerts;
+using System.Diagnostics;
 
 
 namespace EasySave.Maui.Services
@@ -171,7 +172,6 @@ namespace EasySave.Maui.Services
                 UpdateState(job);
 
                 LoadJobsFromFile();
-                Toast.Make($"Le job {job.Name} a été réalisé avec succès.", ToastDuration.Short).Show();
             }
             catch(Exception ex)
             {
@@ -195,7 +195,6 @@ namespace EasySave.Maui.Services
                 UpdateState(job);
 
                 LoadJobsFromFile();
-                Toast.Make($"Le job {job.Name} a été réalisé avec succès.", ToastDuration.Short).Show();
             }
             catch (Exception ex)
             {
@@ -271,6 +270,14 @@ namespace EasySave.Maui.Services
                     Directory.CreateDirectory(job.TargetPath);
 
                 var settings = AppSettings.Load();
+                List<string> businessSoftwares = settings.Softwares ?? new List<string>();
+
+                if (IsBusinessSoftwareRunning(businessSoftwares))
+                {
+                    Toast.Make("Un logiciel métier est en cours d'exécution. Sauvegarde annulée.", ToastDuration.Short).Show();
+                    return;
+                }
+
                 var encryptExtensions = settings.EncryptExtensions?.Select(e => e.ToLower()).ToList() ?? new List<string>();
                 var cryptoService = new EncryptWithCryptoSoft();
 
@@ -292,9 +299,16 @@ namespace EasySave.Maui.Services
 
                 foreach (string file in files)
                 {
+                    long fileSize = new FileInfo(file).Length;
+                    if (IsBusinessSoftwareRunning(businessSoftwares))
+                    {
+                        Toast.Make("Un logiciel métier est en cours d'exécution. Sauvegarde annulée.", ToastDuration.Short).Show();
+                        _logger.LogBackupAction(job.Name, job.SourcePath, job.TargetPath, fileSize, _timer.GetElapsedMilliseconds(), 0, true);
+                        return;
+                    }
+
                     string relativePath = Path.GetRelativePath(job.SourcePath, file);
                     string destinationFile = Path.Combine(job.TargetPath, relativePath);
-                    long fileSize = new FileInfo(file).Length;
                     bool shouldEncrypt = IsCryptChecked && encryptExtensions.Contains(Path.GetExtension(file).ToLower());
                     bool sourceEncrypted = IsFileEncrypted(file);
                     double encryptionTime = 0;
@@ -314,7 +328,7 @@ namespace EasySave.Maui.Services
 
                             if (filesAreIdentical)
                             {
-                                System.Console.WriteLine($"Fichier inchangé : {file}");
+                                Console.WriteLine($"Fichier inchangé : {file}");
                                 processedFiles++;
                                 continue;
                             }
@@ -323,11 +337,11 @@ namespace EasySave.Maui.Services
                         _timer.Start();
                         _fileHelper.CopyFile(file, destinationFile);
                         _timer.Stop();
-                        System.Console.WriteLine($"Fichier copié : {file} -> {destinationFile}");
+                        Console.WriteLine($"Fichier copié : {file} -> {destinationFile}");
 
                         if (sourceEncrypted)
                         {
-                            System.Console.WriteLine($"Fichier déjà chiffré : {file}, aucune action de chiffrement.");
+                            Console.WriteLine($"Fichier déjà chiffré : {file}, aucune action de chiffrement.");
                         }
                         else if (shouldEncrypt)
                         {
@@ -341,7 +355,6 @@ namespace EasySave.Maui.Services
                                 {
                                     encryptionTime = encryptionTimer.Elapsed.TotalMilliseconds;
                                     Toast.Make($"Fichier chiffré : {file} -> {destinationFile} (en {encryptionTime} ms)", ToastDuration.Short).Show();
-                                    
                                 }
                                 else
                                 {
@@ -353,7 +366,6 @@ namespace EasySave.Maui.Services
                             {
                                 encryptionTime = -1;
                                 Toast.Make($"Erreur lors du chiffrement du fichier {file} : {ex.Message}", ToastDuration.Short).Show();
-                                
                             }
                         }
 
@@ -372,18 +384,38 @@ namespace EasySave.Maui.Services
                     _logger.LogBackupAction(job.Name, job.SourcePath, job.TargetPath, fileSize, _timer.GetElapsedMilliseconds(), encryptionTime, false);
                 }
 
+                Toast.Make($"Le job {job.Name} a été réalisé avec succès.", ToastDuration.Short).Show();
                 state.State = "END";
                 state.Progression = 100;
                 _stateManager.UpdateState(state);
-
             }
             catch (Exception ex)
             {
-                System.Console.WriteLine($"Erreur lors de la sauvegarde : {ex.Message}");
+                Console.WriteLine($"Erreur lors de la sauvegarde : {ex.Message}");
             }
         }
 
-
+        private bool IsBusinessSoftwareRunning(List<string> softwareNames)
+        {
+            try
+            {
+                foreach (var softwareName in softwareNames)
+                {
+                    var processes = Process.GetProcessesByName(softwareName);
+                    if (processes.Any())
+                    {
+                        Console.WriteLine($"Logiciel métier détecté : {softwareName}");
+                        return true;
+                    }
+                }
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erreur lors de la vérification des logiciels métiers : {ex.Message}");
+                return false;
+            }
+        }
 
         private bool IsFileEncrypted(string filePath)
         {

@@ -10,7 +10,6 @@ namespace EasySave.Maui.Logging
 
         public Logger(string logDirectory, string logFileType)
         {
-            // Choisir le writer en fonction du type de fichier de log
             _logWriter = logFileType.ToLower() switch
             {
                 "xml" => new XmlLogWriter(Path.Combine(AppContext.BaseDirectory, logDirectory)),

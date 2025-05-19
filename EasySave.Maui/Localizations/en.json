@@ -12,7 +12,7 @@
     "destinationPathJob": "Target Path",
     "backupTypeJob": "Type",
     "lastRunJob": "Last Run",
-    "softwares": "Business Softwares",
+    "softwares": "Business Softwares (process name)",
     "cancel": "Cancel",
     "confirm": "Confirm",
     "createSelectionText": "Create and execute the selection",
