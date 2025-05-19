@@ -49,9 +49,6 @@ public partial class MainViewModel : ObservableObject
     private bool isFrench;
 
     [ObservableProperty]
-    private string addButtonText;
-
-    [ObservableProperty]
     private string newExtension;
 
     [ObservableProperty]
@@ -96,11 +93,87 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
-    public string CurrentLogFormat => IsXmlLog ? "xml" : "json";
+    public string CurrentLogFormat
+    {
+        get
+        {
+            string formatKey = IsXmlLog ? "xml" : "json";
+            string logFormat = _localizationService.GetLocalizedString(formatKey);
+            return _localizationService.GetLocalizedString("LogFormat", logFormat);
+        }
+    }
+
+    [ObservableProperty]
+    private string addButtonText;
+    [ObservableProperty]
+    private string deleteJobButtonText;
+    [ObservableProperty]
+    private string executeAllButtonText;
+    [ObservableProperty]
+    private string executeSelectedButtonText;
+    [ObservableProperty]
+    private string createSelectiondButtonText;
+    [ObservableProperty]
+    private string cryptButtonText;
+    [ObservableProperty]
+    private string parametersButtonText;
+
+    [ObservableProperty]
+    private string numberTab;
+    [ObservableProperty]
+    private string nameTab;
+    [ObservableProperty]
+    private string sourcePathTab;
+    [ObservableProperty]
+    private string destinationPathTab;
+    [ObservableProperty]
+    private string backupTypeTab;
+    [ObservableProperty]
+    private string lastRunTab;
+    [ObservableProperty]
+    private string softwaresText;
+    [ObservableProperty]
+    private string cancelButtonText;
+    [ObservableProperty]
+    private string confirmButtonText;
+    [ObservableProperty]
+    private string createSelectionText;
+    [ObservableProperty]
+    private string createSelectionExample1;
+    [ObservableProperty]
+    private string createSelectionExample2;
+    [ObservableProperty]
+    private string changeLanguage;
+    [ObservableProperty]
+    private string changeLogFormat;
 
     private void UpdateTexts()
     {
         AddButtonText = _localizationService.GetLocalizedString("addJob");
+        DeleteJobButtonText = _localizationService.GetLocalizedString("deleteJob");
+        ExecuteAllButtonText = _localizationService.GetLocalizedString("executeAll");
+        ExecuteSelectedButtonText = _localizationService.GetLocalizedString("executeSelected");
+        CreateSelectiondButtonText = _localizationService.GetLocalizedString("createSelection");
+        CryptButtonText = _localizationService.GetLocalizedString("crypt");
+        ParametersButtonText = _localizationService.GetLocalizedString("parameters");
+
+        NumberTab = _localizationService.GetLocalizedString("numberJob");
+        NameTab = _localizationService.GetLocalizedString("nameJob");
+        SourcePathTab = _localizationService.GetLocalizedString("sourcePathJob");
+        DestinationPathTab = _localizationService.GetLocalizedString("destinationPathJob");
+        BackupTypeTab = _localizationService.GetLocalizedString("backupTypeJob");
+        LastRunTab = _localizationService.GetLocalizedString("lastRunJob");
+        SoftwaresText = _localizationService.GetLocalizedString("softwares");
+
+        CancelButtonText = _localizationService.GetLocalizedString("cancel");
+        ConfirmButtonText = _localizationService.GetLocalizedString("confirm");
+
+        CreateSelectionText = _localizationService.GetLocalizedString("createSelectionText");
+
+        CreateSelectionExample1 = _localizationService.GetLocalizedString("createSelectionExample1");
+        CreateSelectionExample2 = _localizationService.GetLocalizedString("createSelectionExample2");
+        ChangeLanguage = _localizationService.GetLocalizedString("changeLanguage");
+        ChangeLogFormat = _localizationService.GetLocalizedString("changeLogFormat");
     }
 
     partial void OnIsFrenchChanged(bool value)
