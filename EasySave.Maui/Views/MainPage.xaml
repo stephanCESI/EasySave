@@ -37,7 +37,7 @@
                         <Label Text="{Binding CurrentLogFormat}" TextColor="Black"/>
                     </StackLayout>
 
-                    <Button Command="{Binding OpenParametersPopUpCommand}" Text="{Binding ParametersButtonText}"  MaximumWidthRequest="150" BackgroundColor="{StaticResource MainColor}"/>
+                    <Button VerticalOptions="Center" Command="{Binding OpenParametersPopUpCommand}" Text="{Binding ParametersButtonText}"  MaximumWidthRequest="150" BackgroundColor="{StaticResource MainColor}" TextColor="White"/>
                 </StackLayout>
 
             </Grid>
@@ -108,15 +108,15 @@
 
 
                 <StackLayout Orientation="Vertical" Grid.Column="1" Spacing="20" VerticalOptions="Center">
-                    <Button Command="{Binding OpenAddJobPopUpCommand}" Grid.Column="3" Text="{Binding AddButtonText}"  MaximumWidthRequest="200" BackgroundColor="{StaticResource MainColor}"/>
+                    <Button TextColor="White" Command="{Binding OpenAddJobPopUpCommand}" Grid.Column="3" Text="{Binding AddButtonText}"  MaximumWidthRequest="200" BackgroundColor="{StaticResource MainColor}"/>
                     <Button 
                          Text="{Binding DeleteJobButtonText}" 
                         Command="{Binding OpenDeleteJobPopUpCommand}"
                         Grid.Column="3" MaximumWidthRequest="200" BackgroundColor="{StaticResource MainColor}"
-                        TextColor="Black"/>
-                    <Button Grid.Column="3" Text="{Binding ExecuteAllButtonText}" MaximumWidthRequest="200" BackgroundColor="{StaticResource MainColor}" Command="{Binding RunAllJobsCommand}"/>
-                    <Button Grid.Column="3" Text="{Binding ExecuteSelectedButtonText}"  MaximumWidthRequest="200" BackgroundColor="{StaticResource MainColor}" Command="{Binding RunSelectedJobsCommand}" />
-                    <Button Grid.Column="3" Text="{Binding CreateSelectiondButtonText}"  MaximumWidthRequest="200" BackgroundColor="{StaticResource MainColor}" Command="{Binding OpenPopUpCreateSelectionCommand}"/>
+                        TextColor="White"/>
+                    <Button TextColor="White" Grid.Column="3" Text="{Binding ExecuteAllButtonText}" MaximumWidthRequest="200" BackgroundColor="{StaticResource MainColor}" Command="{Binding RunAllJobsCommand}"/>
+                    <Button TextColor="White" Grid.Column="3" Text="{Binding ExecuteSelectedButtonText}"  MaximumWidthRequest="200" BackgroundColor="{StaticResource MainColor}" Command="{Binding RunSelectedJobsCommand}" />
+                    <Button TextColor="White" Grid.Column="3" Text="{Binding CreateSelectiondButtonText}"  MaximumWidthRequest="200" BackgroundColor="{StaticResource MainColor}" Command="{Binding OpenPopUpCreateSelectionCommand}"/>
 
                     <HorizontalStackLayout Grid.Column="3" HorizontalOptions="Center">
                         <CheckBox IsChecked="{Binding IsCryptChecked}" Background="{StaticResource MainColor}" Color="{StaticResource MainColor}" VerticalOptions="Center"/>
@@ -145,16 +145,16 @@
                     <Entry Placeholder="Chemin cible" Text="{Binding TargetPath}" Background="{StaticResource SecColor}" TextColor="Black"/>
 
                     <Picker Title="Type de backup"
-        ItemsSource="{Binding BackupTypes}"
-        SelectedItem="{Binding SelectedBackupType}"
-        Background="{StaticResource SecColor}"
-        TextColor="Black"/>
+                        ItemsSource="{Binding BackupTypes}"
+                        SelectedItem="{Binding SelectedBackupType}"
+                        Background="{StaticResource SecColor}"
+                        TextColor="Black"/>
 
 
                 </StackLayout>
                 <StackLayout Orientation="Horizontal" Grid.Row="2" Spacing="50" HorizontalOptions="Center">
-                    <Button Command="{Binding ClickCancelButtonCommand}" Grid.Column="3" Text="Annuler"  MaximumWidthRequest="150" BackgroundColor="Tomato"/>
-                    <Button Text="Ajouter Job" Command="{Binding AddJobCommand}" Grid.Column="3" MaximumWidthRequest="150" BackgroundColor="LimeGreen"/>
+                    <Button Command="{Binding ClickCancelButtonCommand}" Grid.Column="3" Text="{Binding CancelButtonText}"  MaximumWidthRequest="150" BackgroundColor="Tomato"/>
+                    <Button Text="{Binding AddButtonText}" Command="{Binding AddJobCommand}" Grid.Column="3" MaximumWidthRequest="150" BackgroundColor="LimeGreen"/>
                 </StackLayout>
             </Grid>
         </Grid>
@@ -278,12 +278,12 @@
                     <RowDefinition  Height="Auto"/>
                 </Grid.RowDefinitions>
                 <Label Grid.Row="0" FontSize="Title" 
-       Text="{Binding SelectedJobNames, StringFormat='Voulez-vous supprimer les jobs : {0} ?'}" 
-       HorizontalOptions="Center" 
-       TextColor="Black"/>
+                       Text="{Binding SelectedJobNames, StringFormat='Voulez-vous supprimer les jobs : {0} ?'}" 
+                       HorizontalOptions="Center" 
+                       TextColor="Black"/>
                 <StackLayout Orientation="Horizontal" Grid.Row="1" Spacing="50" HorizontalOptions="Center">
-                    <Button Text="Annuler"  MaximumWidthRequest="150" BackgroundColor="Tomato" Command="{Binding ClickCancelButtonCommand}"/>
-                    <Button Text="Supprimer"  MaximumWidthRequest="150" BackgroundColor="LimeGreen" Command="{Binding DeleteSelectedJobsCommand}"/>
+                    <Button Text="{Binding CancelButtonText}"  MaximumWidthRequest="150" BackgroundColor="Tomato" Command="{Binding ClickCancelButtonCommand}"/>
+                    <Button Text="{Binding DeleteJobButtonText}"  MaximumWidthRequest="150" BackgroundColor="LimeGreen" Command="{Binding DeleteSelectedJobsCommand}"/>
                 </StackLayout>
             </Grid>
         </Grid>
