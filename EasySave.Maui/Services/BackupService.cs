@@ -10,6 +10,7 @@ using EasySave.Maui.Logging;
 using EasySave.Maui.Localizations;
 using System.Data;
 using System.Security.Cryptography;
+using System.Text;
 
 namespace EasySave.Maui.Services
 {
@@ -216,14 +217,10 @@ namespace EasySave.Maui.Services
             try
             {
                 if (!Directory.Exists(job.SourcePath))
-                {
                     return;
-                }
 
                 if (!Directory.Exists(job.TargetPath))
-                {
                     Directory.CreateDirectory(job.TargetPath);
-                }
 
                 var settings = AppSettings.Load();
                 var encryptExtensions = settings.EncryptExtensions?.Select(e => e.ToLower()).ToList() ?? new List<string>();
@@ -231,9 +228,7 @@ namespace EasySave.Maui.Services
 
                 string[] files = Directory.GetFiles(job.SourcePath, "*.*", SearchOption.AllDirectories);
                 int totalFiles = files.Length;
-                long totalSize = files.Sum(file => new FileInfo(file).Length);
                 int processedFiles = 0;
-                long copiedSize = 0;
 
                 var state = new BackupState(job.Name)
                 {
@@ -241,7 +236,6 @@ namespace EasySave.Maui.Services
                     TargetFilePath = job.TargetPath,
                     State = "ACTIVE",
                     TotalFilesToCopy = totalFiles,
-                    TotalFilesSize = totalSize,
                     NbFilesLeftToDo = totalFiles,
                     Progression = 0
                 };
@@ -252,33 +246,41 @@ namespace EasySave.Maui.Services
                 {
                     string relativePath = Path.GetRelativePath(job.SourcePath, file);
                     string destinationFile = Path.Combine(job.TargetPath, relativePath);
-                    double transferTime = 0;
-                    double encryptionTime = 0;
-                    bool jobStopped = false;
                     long fileSize = new FileInfo(file).Length;
+                    bool shouldEncrypt = IsCryptChecked && encryptExtensions.Contains(Path.GetExtension(file).ToLower());
+                    bool sourceEncrypted = IsFileEncrypted(file);
 
                     try
                     {
-                        if (job.Type == BackupType.Differential &&
-                            File.Exists(destinationFile) &&
-                            CompareFileHashes(file, destinationFile) &&
-                            new FileInfo(file).Length == new FileInfo(destinationFile).Length)
-                        {
-                            System.Console.WriteLine($"Fichier inchangé : {file}");
-                        }
-                        else
-                        {
-                            _timer.Start();
-                            _fileHelper.CopyFile(file, destinationFile);
-                            _timer.Stop();
-                            transferTime = _timer.GetElapsedMilliseconds();
-                            copiedSize += fileSize;
-                            processedFiles++;
+                        bool filesAreIdentical = false;
 
-                            System.Console.WriteLine($"Fichier copié : {file} -> {destinationFile} (en {transferTime} ms)");
+                        if (job.Type == BackupType.Differential && File.Exists(destinationFile))
+                        {
+                            bool destEncrypted = IsFileEncrypted(destinationFile);
+
+                            if (sourceEncrypted == destEncrypted)
+                            {
+                                filesAreIdentical = CompareFileHashes(file, destinationFile);
+                            }
+
+                            if (filesAreIdentical)
+                            {
+                                System.Console.WriteLine($"Fichier inchangé : {file}");
+                                processedFiles++;
+                                continue;
+                            }
                         }
 
-                        if (IsCryptChecked && encryptExtensions.Contains(Path.GetExtension(file).ToLower()))
+                        _timer.Start();
+                        _fileHelper.CopyFile(file, destinationFile);
+                        _timer.Stop();
+                        System.Console.WriteLine($"Fichier copié : {file} -> {destinationFile}");
+
+                        if (sourceEncrypted)
+                        {
+                            System.Console.WriteLine($"Fichier déjà chiffré : {file}, aucune action de chiffrement.");
+                        }
+                        else if (shouldEncrypt)
                         {
                             try
                             {
@@ -288,27 +290,24 @@ namespace EasySave.Maui.Services
 
                                 if (success)
                                 {
-                                    encryptionTime = encryptionTimer.Elapsed.TotalMilliseconds;
-                                    System.Console.WriteLine($"Fichier chiffré : {file} -> {destinationFile} (en {encryptionTime} ms)");
+                                    System.Console.WriteLine($"Fichier chiffré : {file} -> {destinationFile}");
                                 }
                                 else
                                 {
-                                    encryptionTime = -1;
                                     System.Console.WriteLine($"Échec du chiffrement du fichier : {file}");
                                 }
                             }
                             catch (Exception ex)
                             {
-                                encryptionTime = -1;
                                 System.Console.WriteLine($"Erreur lors du chiffrement du fichier {file} : {ex.Message}");
                             }
                         }
 
-                        _logger.LogBackupAction(job.Name, file, destinationFile, fileSize, transferTime, encryptionTime, jobStopped);
+                        processedFiles++;
                     }
                     catch (Exception ex)
                     {
-                        System.Console.WriteLine($"Erreur de traitement du fichier {file} : {ex.Message}");
+                        System.Console.WriteLine($"Erreur lors de la sauvegarde du fichier {file} : {ex.Message}");
                     }
 
                     double progression = (double)processedFiles / totalFiles * 100;
@@ -328,6 +327,48 @@ namespace EasySave.Maui.Services
             }
         }
 
+
+
+        private bool IsFileEncrypted(string filePath)
+        {
+            try
+            {
+                if (!File.Exists(filePath))
+                    return false;
+
+                using (var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read))
+                {
+                    byte[] buffer = new byte[8];
+                    int bytesRead = fs.Read(buffer, 0, buffer.Length);
+
+                    if (bytesRead < buffer.Length)
+                        return false;
+
+                    string decrypted = XOREncrypt(Encoding.UTF8.GetString(buffer));
+
+                    return decrypted.StartsWith("Ces1Kryp");
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine($"Erreur lors de la vérification du chiffrement du fichier {filePath} : {ex.Message}");
+                return false;
+            }
+        }
+
+        private string XOREncrypt(string data)
+        {
+            var dataLen = data.Length;
+            var keyLen = "Ces1Kryp".Length;
+            char[] output = new char[dataLen];
+
+            for (var i = 0; i < dataLen; ++i)
+            {
+                output[i] = (char)(data[i] ^ "Ces1Kryp"[i % keyLen]);
+            }
+
+            return new string(output);
+        }
 
     }
 }
