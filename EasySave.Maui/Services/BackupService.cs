@@ -8,6 +8,7 @@ using EasySave.Maui.Models;
 using EasySave.Maui.Utils;
 using EasySave.Maui.Logging;
 using EasySave.Maui.Localizations;
+using System.Data;
 
 namespace EasySave.Maui.Services
 {
@@ -20,6 +21,7 @@ namespace EasySave.Maui.Services
         private readonly LocalizationService _localizationService;
         private readonly string _logDirectory;
         private readonly StateManager _stateManager;
+        private readonly string _backUpFilePath;
 
         public BackupService(Logger logger, LocalizationService localizationService)
         {
@@ -34,6 +36,9 @@ namespace EasySave.Maui.Services
 
             _stateManager = new StateManager(_logDirectory);
 
+
+            _backUpFilePath = Path.Combine(_logDirectory, "backupJobs.json");
+
             LoadJobsFromFile();
         }
 
@@ -41,14 +46,12 @@ namespace EasySave.Maui.Services
         {
             try
             {
-                string filePath = Path.Combine(_logDirectory, "backupJobs.json");
-
                 if (!Directory.Exists(_logDirectory))
                 {
                     Directory.CreateDirectory(_logDirectory);
                 }
                 string jsonContent = JsonConvert.SerializeObject(_backupJobs, Formatting.Indented);
-                File.WriteAllText(filePath, jsonContent);
+                File.WriteAllText(_backUpFilePath, jsonContent);
 
             }
             catch (Exception ex)
@@ -126,9 +129,13 @@ namespace EasySave.Maui.Services
             var job = _backupJobs[index];
             job.IsActive = true;
             job.LastRun = DateTime.Now;
+            UpdateState(job);
 
             PerformBackup(job, IsCryptChecked);
             job.IsActive = false;
+            UpdateState(job);
+
+            LoadJobsFromFile();
         }
 
         public void RunBackupJob(BackupJob job, bool IsCryptChecked)
@@ -139,11 +146,33 @@ namespace EasySave.Maui.Services
             job.LastRun = DateTime.Now;
 
             PerformBackup(job, IsCryptChecked);
+            UpdateState(job);
 
             job.IsActive = false;
+            UpdateState(job);
+
+            LoadJobsFromFile();
         }
 
+        public void UpdateState(BackupJob newJob)
+        {
+            var existingState = _backupJobs.Find(s => s.Name == newJob.Name);
 
+            SaveBackupJson();
+        }
+
+        private void SaveBackupJson()
+        {
+            try
+            {
+                string jsonContent = JsonConvert.SerializeObject(_backupJobs, Formatting.Indented);
+                File.WriteAllText(_backUpFilePath, jsonContent);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erreur lors de la sauvegarde de l'état : {ex.Message}");
+            }
+        }
 
         public void ListBackupJobs()
         {
@@ -261,7 +290,7 @@ namespace EasySave.Maui.Services
                     }
                     catch (Exception ex)
                     {
-                        System.Console.WriteLine(ex.Message));
+                        System.Console.WriteLine(ex.Message);
                     }
 
                     double progression = (double)processedFiles / totalFiles * 100;
@@ -275,15 +304,11 @@ namespace EasySave.Maui.Services
                 state.State = "END";
                 state.Progression = 100;
                 _stateManager.UpdateState(state);
-
-                LoadJobsFromFile();
             }
             catch (Exception ex)
             {
-                System.Console.WriteLine(ex.Message));
+                System.Console.WriteLine(ex.Message);
             }
         }
-
-
     }
 }
