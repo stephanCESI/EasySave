@@ -249,6 +249,7 @@ namespace EasySave.Maui.Services
                     long fileSize = new FileInfo(file).Length;
                     bool shouldEncrypt = IsCryptChecked && encryptExtensions.Contains(Path.GetExtension(file).ToLower());
                     bool sourceEncrypted = IsFileEncrypted(file);
+                    double encryptionTime = 0;
 
                     try
                     {
@@ -290,15 +291,18 @@ namespace EasySave.Maui.Services
 
                                 if (success)
                                 {
+                                    encryptionTime = encryptionTimer.Elapsed.TotalMilliseconds;
                                     System.Console.WriteLine($"Fichier chiffré : {file} -> {destinationFile}");
                                 }
                                 else
                                 {
+                                    encryptionTime = -1;
                                     System.Console.WriteLine($"Échec du chiffrement du fichier : {file}");
                                 }
                             }
                             catch (Exception ex)
                             {
+                                encryptionTime = -1;
                                 System.Console.WriteLine($"Erreur lors du chiffrement du fichier {file} : {ex.Message}");
                             }
                         }
@@ -315,11 +319,13 @@ namespace EasySave.Maui.Services
                     state.Progression = progression;
 
                     _stateManager.UpdateState(state);
+                    _logger.LogBackupAction(job.Name, job.SourcePath, job.TargetPath, fileSize, _timer.GetElapsedMilliseconds(), encryptionTime, false);
                 }
 
                 state.State = "END";
                 state.Progression = 100;
                 _stateManager.UpdateState(state);
+
             }
             catch (Exception ex)
             {
