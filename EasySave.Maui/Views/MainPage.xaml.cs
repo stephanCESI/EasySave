@@ -2,6 +2,7 @@
 using EasySave.Maui.Models;
 using EasySave.Maui.ViewModels;
 
+
 namespace EasySave.Maui
 {
     public partial class MainPage : ContentPage
@@ -10,10 +11,12 @@ namespace EasySave.Maui
         {
             InitializeComponent();
             BindingContext = vm;
+            
         }
 
         private void OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            
             if (BindingContext is MainViewModel viewModel)
             {
                 viewModel.SelectedJobs.Clear();
