@@ -1,29 +1,61 @@
 ﻿using System;
+using System.Threading;
 
 namespace Cryptosoft
 {
     class Program
     {
+        private static Mutex mutex = null;
+        private const string MutexName = "CryptosoftMutex";
+
         static int Main(string[] args)
         {
+            
+            mutex = new Mutex(false, MutexName);
+            if (!mutex.WaitOne(0, false))
+            {
+                Console.WriteLine("L'application est déjà en cours d'exécution.");
+                return -1;
+            }
+
             string source;
             string destination;
 
             try
             {
-                // Lancer l'application console : Cryptosoft source fichier_source destination fichier destination
-                int s = Array.IndexOf(args, "source");
-                source = args[s + 1];
-                int d = Array.IndexOf(args, "destination");
-                destination = args[d + 1];
+                try
+                {
+                    int s = Array.IndexOf(args, "source");
+                    int d = Array.IndexOf(args, "destination");
+
+                    if (s == -1 || s + 1 >= args.Length || d == -1 || d + 1 >= args.Length)
+                    {
+                        Console.WriteLine("Erreur : les arguments 'source' ou 'destination' sont manquants ou incorrects.");
+                        return -1;
+                    }
+
+                    source = args[s + 1];
+                    destination = args[d + 1];
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Erreur lors du traitement des arguments : {ex.Message}");
+                    return -1;
+                }
+
+                return new XOR(source, destination).StartEncrypt();
             }
-            catch
+            finally
             {
-                return -1;
-                // Erreur - Arguments "source" ou "destination" pas trouvés
+                
+                if (mutex != null)
+                {
+                    mutex.ReleaseMutex();
+                    mutex.Dispose();
+                }
             }
 
-            return new XOR(source, destination).StartEncrypt();
+
         }
     }
 }
