@@ -57,6 +57,8 @@ public static class AppSettingsHelper
             {
                 configData["EncryptExtensions"] = settings.EncryptExtensions;
                 configData["Softwares"] = settings.Softwares;
+                configData["PriorityExtensions"] = settings.PriorityExtensions;
+                configData["FileMaxSizes"] = settings.FileMaxSizes;
 
                 string updatedJson = JsonConvert.SerializeObject(configData, Formatting.Indented);
                 File.WriteAllText(SettingsFilePath, updatedJson);
@@ -98,6 +100,32 @@ public static class AppSettingsHelper
     {
         var settings = AppSettings.Load();
         return settings.Softwares ?? new List<string>();
+    }
+
+    public static void SetPriorityExtensions(List<string> priorityExtensions)
+    {
+        var settings = AppSettings.Load();
+        settings.PriorityExtensions = priorityExtensions;
+        Save(settings);
+    }
+
+    public static List<string> GetPriorityExtensions()
+    {
+        var settings = AppSettings.Load();
+        return settings.PriorityExtensions ?? new List<string>();
+    }
+
+    public static void SetMaxFileSizes(List<string> maxFileSizes)
+    {
+        var settings = AppSettings.Load();
+        settings.FileMaxSizes = maxFileSizes;
+        Save(settings);
+    }
+
+    public static List<string> GetMaxFileSizes()
+    {
+        var settings = AppSettings.Load();
+        return settings.FileMaxSizes ?? new List<string>();
     }
 
 }

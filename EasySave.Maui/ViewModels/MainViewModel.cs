@@ -55,6 +55,12 @@ public partial class MainViewModel : ObservableObject
     private string newSoftware;
 
     [ObservableProperty]
+    private string newPriorityExtension;
+
+    [ObservableProperty]
+    private string newMaxFileSize;
+
+    [ObservableProperty]
     private bool isCryptChecked;
 
     [ObservableProperty]
@@ -62,6 +68,12 @@ public partial class MainViewModel : ObservableObject
 
     [ObservableProperty]
     private ObservableCollection<string> softwares = new();
+
+    [ObservableProperty]
+    private ObservableCollection<string> priorityExtensions = new();
+
+    [ObservableProperty]
+    private ObservableCollection<string> maxFileSizes = new();
 
     [ObservableProperty]
     private ObservableCollection<BackupJob> selectedJobs = new();
@@ -195,7 +207,7 @@ public partial class MainViewModel : ObservableObject
         _backupService = backupService;
         _localizationService = localizationService;
         LoadJobs();
-        LoadExtensionsAndSoftwares();
+        LoadParameters();
         IsVisibleAddJob = false;
         IsVisibleDeleteJob = false;
         IsVisibleCreateSelection = false;
@@ -402,6 +414,29 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private void AddPriorityExtension(string priorityExtension)
+    {
+        if (!string.IsNullOrWhiteSpace(priorityExtension) && !PriorityExtensions.Contains(priorityExtension))
+        {
+            if (!priorityExtension.StartsWith("."))
+            {
+                priorityExtension = "." + priorityExtension;
+            }
+            PriorityExtensions.Add(priorityExtension);
+            NewPriorityExtension = string.Empty;
+        }
+    }
+
+    [RelayCommand]
+    private void RemovePriorityExtension(string priorityExtension)
+    {
+        if (PriorityExtensions.Contains(priorityExtension))
+        {
+            PriorityExtensions.Remove(priorityExtension);
+        }
+    }
+
+    [RelayCommand]
     private void AddSoftware(string software)
     {
         if (!string.IsNullOrWhiteSpace(software) && !Softwares.Contains(software))
@@ -421,22 +456,52 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void SaveExtensionsAndSoftwares()
+    private void AddMaxFileSize(string maxFileSize)
+    {
+        if (!string.IsNullOrWhiteSpace(maxFileSize) && !MaxFileSizes.Contains(maxFileSize))
+        {
+            MaxFileSizes.Add(maxFileSize);
+            NewMaxFileSize = string.Empty;
+        }
+    }
+
+    [RelayCommand]
+    private void RemoveMaxFileSize(string maxFileSize)
+    {
+        if (MaxFileSizes.Contains(maxFileSize))
+        {
+            MaxFileSizes.Remove(maxFileSize);
+        }
+    }
+
+    [RelayCommand]
+    private void SaveParameters()
     {
         SaveExtensions();
         SaveSoftwares();
+        SavePriorityExtensions();
+        SaveMaxFileSizes();
+        IsVisibleParameters = false;
     }
 
     private void SaveExtensions()
     {
         AppSettingsHelper.SetEncryptExtensions([.. Extensions]);
-        IsVisibleParameters = false;
     }
 
     private void SaveSoftwares()
     {
         AppSettingsHelper.SetSoftwares([.. Softwares]);
-        IsVisibleParameters = false;
+    }
+
+    private void SavePriorityExtensions()
+    {
+        AppSettingsHelper.SetPriorityExtensions([.. PriorityExtensions]);
+    }
+
+    private void SaveMaxFileSizes()
+    {
+        AppSettingsHelper.SetMaxFileSizes([.. MaxFileSizes]);
     }
 
     private void LoadExtensions()
@@ -450,10 +515,23 @@ public partial class MainViewModel : ObservableObject
         var savedSoftwares = AppSettingsHelper.GetSoftwares();
         Softwares = new ObservableCollection<string>(savedSoftwares);
     }
+    private void LoadPriorityExtensions()
+    {
+        var savedExtensions = AppSettingsHelper.GetPriorityExtensions();
+        PriorityExtensions = new ObservableCollection<string>(savedExtensions);
+    }
 
-    private void LoadExtensionsAndSoftwares()
+    private void LoadFileMaxSizes()
+    {
+        var savedSoftwares = AppSettingsHelper.GetMaxFileSizes();
+        MaxFileSizes = new ObservableCollection<string>(savedSoftwares);
+    }
+
+    private void LoadParameters()
     {
         LoadExtensions();
         LoadSoftwares();
+        LoadPriorityExtensions();
+        LoadFileMaxSizes();
     }
 }

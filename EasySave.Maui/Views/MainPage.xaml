@@ -163,7 +163,7 @@
             <Grid BackgroundColor="Black"  Opacity="0.5" ></Grid>
             <Grid  VerticalOptions="Center" HorizontalOptions="Center" 
       RowSpacing="25"  BackgroundColor="{StaticResource White}" 
-      Padding="20" WidthRequest="600">
+      Padding="20">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
@@ -171,13 +171,15 @@
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="0.5*"/>
-                    <ColumnDefinition Width="0.5*"/>
+                    <ColumnDefinition Width="0.25*"/>
+                    <ColumnDefinition Width="0.25*"/>
+                    <ColumnDefinition Width="0.25*"/>
+                    <ColumnDefinition Width="0.25*"/>
                 </Grid.ColumnDefinitions>
                 <Label Grid.Row="0" Text="{Binding ParametersButtonText}" TextColor="Black" Grid.ColumnSpan="2" HorizontalOptions="Center"/>
 
                 <VerticalStackLayout Grid.Row="1" Grid.Column="0">
-                    <Label Text="Extensions" TextColor="Black"/>
+                    <Label Text="Extensions à crypter" TextColor="Black"/>
                     <HorizontalStackLayout>
                         <Entry x:Name="ExtensionEntry" Text="{Binding NewExtension}" WidthRequest="220" Background="{StaticResource SecColor}"  TextColor="Black"/>
                         <Button 
@@ -241,10 +243,80 @@
                         </DataTemplate>
                     </CollectionView.ItemTemplate>
                 </CollectionView>
+                
+                <!-- ############################################## -->
 
-                <HorizontalStackLayout Spacing="50" HorizontalOptions="Center" Grid.Row="3" Grid.ColumnSpan="2">
+                <VerticalStackLayout Grid.Row="1" Grid.Column="2">
+                    <Label Text="Extensions prioritaires" TextColor="Black"/>
+                    <HorizontalStackLayout>
+                        <Entry x:Name="PriorityExtensionEntry" Text="{Binding NewPriorityExtension}" WidthRequest="220" Background="{StaticResource SecColor}"  TextColor="Black"/>
+                        <Button 
+                            BackgroundColor="{StaticResource MainColor}" 
+                            Text="+" 
+                            Command="{Binding AddPriorityExtensionCommand}"
+                            CommandParameter="{Binding Text, Source={x:Reference PriorityExtensionEntry}}"/>
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+
+                <CollectionView 
+                        ItemsSource="{Binding PriorityExtensions}" 
+                        Grid.Row="2" 
+                        Grid.Column="2" 
+                        HeightRequest="100" 
+                        Margin="0,0,10,0" 
+                        MaximumHeightRequest="500">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <HorizontalStackLayout Spacing="10" Padding="5">
+                                <Label Text="{Binding .}" VerticalOptions="Center" TextColor="Black"/>
+                                <Button Text="X" 
+                                    BackgroundColor="Tomato" 
+                                    TextColor="White"
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:MainViewModel}}, Path=RemovePriorityExtensionCommand}"
+                                    CommandParameter="{Binding .}"/>
+                            </HorizontalStackLayout>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+                <!-- ############################################## -->
+
+                <VerticalStackLayout Grid.Row="1" Grid.Column="3">
+                    <Label Text="Taille max fichiers" TextColor="Black"/>
+                    <HorizontalStackLayout>
+                        <Entry x:Name="MaxFileSizeEntry" Text="{Binding NewMaxFileSize}" WidthRequest="220" Background="{StaticResource SecColor}"  TextColor="Black"/>
+                        <Button 
+                            BackgroundColor="{StaticResource MainColor}" 
+                            Text="+" 
+                            Command="{Binding AddMaxFileSizeCommand}"
+                            CommandParameter="{Binding Text, Source={x:Reference MaxFileSizeEntry}}"/>
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+
+                <CollectionView 
+                        ItemsSource="{Binding MaxFileSizes}" 
+                        Grid.Row="2" 
+                        Grid.Column="3" 
+                        HeightRequest="100" 
+                        Margin="0,0,10,0" 
+                        MaximumHeightRequest="500">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <HorizontalStackLayout Spacing="10" Padding="5">
+                                <Label Text="{Binding .}" VerticalOptions="Center" TextColor="Black"/>
+                                <Button Text="X" 
+                                    BackgroundColor="Tomato" 
+                                    TextColor="White"
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:MainViewModel}}, Path=RemoveMaxFileSizeCommand}"
+                                    CommandParameter="{Binding .}"/>
+                            </HorizontalStackLayout>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+                <HorizontalStackLayout Spacing="50" HorizontalOptions="Center" Grid.Row="3" Grid.ColumnSpan="4">
                     <Button Command="{Binding ClickCancelButtonCommand}" Text="{Binding CancelButtonText}"  MaximumWidthRequest="150" BackgroundColor="Tomato"/>
-                    <Button Command="{Binding SaveExtensionsAndSoftwaresCommand}" Text="{Binding ConfirmButtonText}"  MaximumWidthRequest="150" BackgroundColor="LimeGreen"/>
+                    <Button Command="{Binding SaveParametersCommand}" Text="{Binding ConfirmButtonText}"  MaximumWidthRequest="150" BackgroundColor="LimeGreen"/>
                 </HorizontalStackLayout>
             </Grid>
         </Grid>

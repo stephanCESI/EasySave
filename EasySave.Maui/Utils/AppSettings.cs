@@ -11,6 +11,8 @@ namespace EasySave.Maui.Utils
         public string LogFileType { get; set; }
         public List<string> EncryptExtensions { get; set; }
         public List<string> Softwares { get; set; }
+        public List<string> PriorityExtensions { get; set; }
+        public List<string> FileMaxSizes { get; set; }
 
         public static AppSettings Load()
         {
@@ -35,7 +37,9 @@ namespace EasySave.Maui.Utils
                         LogDirectory = "Logs",
                         LogFileType = "json",
                         EncryptExtensions = [],
-                        Softwares = []
+                        Softwares = [],
+                        PriorityExtensions = [],
+                        FileMaxSizes = []
                     };
                 }
             }
@@ -48,7 +52,9 @@ namespace EasySave.Maui.Utils
                     LogDirectory = "Logs",
                     LogFileType = "json",
                     EncryptExtensions = [],
-                    Softwares = []
+                    Softwares = [],
+                    PriorityExtensions = [],
+                    FileMaxSizes = []
                 };
             }
         }
