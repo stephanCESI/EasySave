@@ -3,14 +3,22 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="Customer.MainPage">
 
-    <Grid>
+    <Grid Padding="20" RowSpacing="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <Image Source="easysavelogo.png" WidthRequest="250" />
+        <Image HorizontalOptions="Start" Source="easysavelogo.png" WidthRequest="250" />
+        <Grid Grid.Row="1" BackgroundColor="{StaticResource Gray100}">
+            
+        </Grid>
+        <StackLayout Grid.Row="2" Orientation="Horizontal" Spacing="20" HorizontalOptions="Center">
+            <Button TextColor="White" Grid.Column="3" Text="Play"  MaximumWidthRequest="200" BackgroundColor="LimeGreen"/>
+            <Button TextColor="White" Grid.Column="3" Text="Stop"  MaximumWidthRequest="200" BackgroundColor="Tomato"  />
+            <Button TextColor="White" Grid.Column="3" Text="Delete" MaximumWidthRequest="200" BackgroundColor="Tomato" />
+        </StackLayout>
     </Grid>
 
 </ContentPage>
