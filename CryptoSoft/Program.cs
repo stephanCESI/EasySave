@@ -48,6 +48,7 @@ namespace Cryptosoft
             finally
             {
                 
+
                 if (mutex != null)
                 {
                     mutex.ReleaseMutex();
