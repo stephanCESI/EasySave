@@ -30,7 +30,7 @@ public static class AppSettingsHelper
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Erreur lors de la mise à jour des paramètres : {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"Erreur lors de la mise à jour des paramètres : {ex.Message}");
         }
     }
 
@@ -46,7 +46,7 @@ public static class AppSettingsHelper
         {
             if (!File.Exists(SettingsFilePath))
             {
-                Console.WriteLine($"Le fichier de configuration '{SettingsFilePath}' est introuvable.");
+                System.Diagnostics.Debug.WriteLine($"Le fichier de configuration '{SettingsFilePath}' est introuvable.");
                 return;
             }
 
@@ -65,12 +65,12 @@ public static class AppSettingsHelper
             }
             else
             {
-                Console.WriteLine("Erreur lors de la désérialisation du fichier de configuration.");
+                System.Diagnostics.Debug.WriteLine("Erreur lors de la désérialisation du fichier de configuration.");
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Erreur lors de la sauvegarde des paramètres : {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"Erreur lors de la sauvegarde des paramètres : {ex.Message}");
         }
     }
 

@@ -43,7 +43,7 @@ namespace EasySave.Maui.Utils
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Erreur pendant la mesure de performance : {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Erreur pendant la mesure de performance : {ex.Message}");
                 return -1;
             }
         }
