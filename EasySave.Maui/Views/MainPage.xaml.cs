@@ -12,6 +12,7 @@ namespace EasySave.Maui
             InitializeComponent();
             BindingContext = vm;
             
+            
         }
 
         private void OnSelectionChanged(object sender, SelectionChangedEventArgs e)

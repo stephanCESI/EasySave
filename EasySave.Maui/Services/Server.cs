@@ -9,9 +9,9 @@ using System.Threading.Tasks;
 
 namespace EasySave.Maui.Services
 {
-    internal class Server
+    public class Server
     {
-        private static Socket StartServer()
+        public static Socket StartServer()
         {
             Socket serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             serverSocket.Bind(new IPEndPoint(IPAddress.Any, 8080));
@@ -20,7 +20,7 @@ namespace EasySave.Maui.Services
             return serverSocket;
         }
 
-        private static Socket AcceptConnection(Socket socket)
+        public static Socket AcceptConnection(Socket socket)
         {
             Socket clientSocket = socket.Accept();
            
@@ -29,7 +29,7 @@ namespace EasySave.Maui.Services
             return clientSocket;
         }
 
-        private static void ListenToClient(Socket client)
+        public static void ListenToClient(Socket client)
         {
             byte[] buffer = new byte[1024];
             int bytesRead = client.Receive(buffer);
@@ -37,7 +37,7 @@ namespace EasySave.Maui.Services
 
         }
 
-        private static void Disconnect(Socket socket)
+        public static void Disconnect(Socket socket)
         {
             socket.Shutdown(SocketShutdown.Both);
             socket.Close();
