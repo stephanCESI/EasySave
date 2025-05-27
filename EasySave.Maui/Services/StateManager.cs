@@ -51,7 +51,7 @@ namespace EasySave.Maui.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Erreur lors de la sauvegarde de l'état : {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Erreur lors de la sauvegarde de l'état : {ex.Message}");
             }
         }
 
@@ -64,7 +64,7 @@ namespace EasySave.Maui.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Erreur lors du chargement de l'état : {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Erreur lors du chargement de l'état : {ex.Message}");
             }
         }
     }
