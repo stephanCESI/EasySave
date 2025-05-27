@@ -9,18 +9,23 @@ using System.Threading.Tasks;
 
 namespace EasySave.Maui.Services
 {
-    public class Server
+    public class WebSocketService
     {
-        public static Socket StartServer()
+        public  void StartServer()
         {
-            Socket serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            serverSocket.Bind(new IPEndPoint(IPAddress.Any, 8080));
-            serverSocket.Listen(10);
-            Console.WriteLine("Server started. Waiting for connections...");
-            return serverSocket;
+            try
+            {
+                Socket serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                serverSocket.Bind(new IPEndPoint(IPAddress.Any, 8080));
+                serverSocket.Listen(10);
+            }
+            catch(Exception ex)
+            {
+
+            }
         }
 
-        public static Socket AcceptConnection(Socket socket)
+        public  Socket AcceptConnection(Socket socket)
         {
             Socket clientSocket = socket.Accept();
            
@@ -36,12 +41,5 @@ namespace EasySave.Maui.Services
             string message = System.Text.Encoding.UTF8.GetString(buffer, 0, bytesRead);
 
         }
-
-        public static void Disconnect(Socket socket)
-        {
-            socket.Shutdown(SocketShutdown.Both);
-            socket.Close();
-        }
-
     }
 }

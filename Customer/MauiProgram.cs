@@ -1,4 +1,7 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.Net.WebSockets;
+using Customer.Services;
+using Customer.ViewModel;
+using Microsoft.Extensions.Logging;
 
 namespace Customer
 {
@@ -18,6 +21,9 @@ namespace Customer
 #if DEBUG
     		builder.Logging.AddDebug();
 #endif
+
+            builder.Services.AddTransient<MainViewModel>();
+            builder.Services.AddSingleton<WebSocketService>();
 
             return builder.Build();
         }

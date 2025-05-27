@@ -15,6 +15,7 @@ public partial class MainViewModel : ObservableObject
 {
     private readonly BackupService _backupService;
     private readonly LocalizationService _localizationService;
+    
 
 
     public ObservableCollection<BackupJob> Jobs { get; } = new();
@@ -210,7 +211,6 @@ public partial class MainViewModel : ObservableObject
         _localizationService = localizationService;
         LoadJobs();
         LoadParameters();
-        LoadServer();
         IsVisibleAddJob = false;
         IsVisibleDeleteJob = false;
         IsVisibleCreateSelection = false;
@@ -531,10 +531,6 @@ public partial class MainViewModel : ObservableObject
         MaxFileSizes = new ObservableCollection<string>(savedSoftwares);
     }
 
-    private void LoadServer()
-    {
-        var socket = Server.StartServer();
-    }
 
     private void LoadParameters()
     {

@@ -8,9 +8,9 @@ using System.Threading.Tasks;
 
 namespace Customer.Services
 {
-    internal class Customer
+    public class WebSocketService
     {
-        private static Socket ConnectToServer()
+        public Socket ConnectToServer()
         {
             Socket clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             IPAddress serverAddress = IPAddress.Parse("127.0.0.1");
@@ -31,12 +31,12 @@ namespace Customer.Services
         }
 
 
-        private static void ListenToServer(Socket client)
+        public static void ListenToServer(Socket client)
         {
 
         }
 
-        private static void Disconnect(Socket socket)
+        public static void Disconnect(Socket socket)
         {
             socket.Shutdown(SocketShutdown.Both);
             socket.Close();
