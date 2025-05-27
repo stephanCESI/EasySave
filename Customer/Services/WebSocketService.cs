@@ -20,6 +20,7 @@ namespace Customer.Services
             {
                 clientSocket.Connect(serverEndPoint);
                 Console.WriteLine("Connect to server");
+                Task.Run(() => ListenToServer(clientSocket));
             }
             catch (SocketException ex)
             {
@@ -27,19 +28,43 @@ namespace Customer.Services
                 return null!;
             }
 
+
+
             return clientSocket;
         }
 
 
-        public static void ListenToServer(Socket client)
+        public async Task ListenToServer(Socket client)
         {
 
         }
 
-        public static void Disconnect(Socket socket)
+        public void SendMessage(Socket socket, string message)
+        {
+            if (socket == null || !socket.Connected)
+            {
+                Console.WriteLine("Socket is not connected.");
+                return;
+            }
+            byte[] messageBytes = Encoding.UTF8.GetBytes(message);
+
+            try
+            {
+                socket.Send(messageBytes);
+                Console.WriteLine("Message sent: " + message);
+            }
+            catch (SocketException ex)
+            {
+                Console.WriteLine("Error sending message: " + ex.Message);
+            }
+        }
+
+        public Socket Disconnect(Socket socket)
         {
             socket.Shutdown(SocketShutdown.Both);
             socket.Close();
+
+            return null!;
 
         }
     }
