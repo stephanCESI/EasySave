@@ -22,7 +22,7 @@ namespace EasySave.Maui.Utils
                 }
 
                 File.Copy(source, target, overwrite);
-                System.Diagnostics.Debug.WriteLine($"Fichier copié : {source} -> {target}");
+                //System.Diagnostics.Debug.WriteLine($"Fichier copié : {source} -> {target}");
             }
             catch (Exception ex)
             {
