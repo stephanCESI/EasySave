@@ -53,9 +53,10 @@
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
+
                 <CollectionView ItemsSource="{Binding Jobs}" 
                         SelectionMode="Multiple" 
-                        SelectedItems="{Binding SelectedJobs}"
+                        SelectionChanged="OnSelectionChanged"
                         Background="{StaticResource Gray100}">
 
                     <CollectionView.Header>

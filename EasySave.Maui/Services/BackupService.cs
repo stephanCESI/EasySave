@@ -159,11 +159,6 @@ namespace EasySave.Maui.Services
         {
             if (job == null) { System.Diagnostics.Debug.WriteLine("RunBackupJobAsync: job est null."); return; }
 
-            if (job.IsActive)
-            {
-                await MainThread.InvokeOnMainThreadAsync(() => Toast.Make($"Job '{job.Name}' déjà en cours.", ToastDuration.Short).Show());
-                return;
-            }
 
             var settings = AppSettings.Load();
             if (IsBusinessSoftwareRunning(settings.Softwares ?? new List<string>()))
