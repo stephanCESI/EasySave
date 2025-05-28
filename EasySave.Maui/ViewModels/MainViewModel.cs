@@ -14,6 +14,8 @@ public partial class MainViewModel : ObservableObject
 {
     private readonly BackupService _backupService;
     private readonly LocalizationService _localizationService;
+    
+
 
     public ObservableCollection<BackupJob> Jobs { get; } = new();
 
@@ -209,6 +211,7 @@ public partial class MainViewModel : ObservableObject
     public MainViewModel(BackupService backupService, LocalizationService localizationService)
     {
         _backupService = backupService;
+
         _localizationService = localizationService;
         LoadJobs();
         LoadParameters();
@@ -225,6 +228,7 @@ public partial class MainViewModel : ObservableObject
 
         var settings = AppSettings.Load();
         Extensions = new ObservableCollection<string>(settings.EncryptExtensions);
+
     }
 
     public void LoadJobs()
@@ -674,6 +678,7 @@ public partial class MainViewModel : ObservableObject
         var savedSoftwares = AppSettingsHelper.GetMaxFileSizes();
         MaxFileSizes = new ObservableCollection<string>(savedSoftwares);
     }
+
 
     private void LoadParameters()
     {

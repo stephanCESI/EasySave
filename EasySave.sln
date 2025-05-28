@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CryptoSoft", "CryptoSoft\Cr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EasySave.Maui", "EasySave.Maui\EasySave.Maui.csproj", "{28503742-A069-4DDD-B842-74D5154D8C2D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Customer", "Customer\Customer.csproj", "{1C1AFD37-0FF4-4625-AA82-88944FC3B440}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -23,6 +25,11 @@ Global
 		{28503742-A069-4DDD-B842-74D5154D8C2D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{28503742-A069-4DDD-B842-74D5154D8C2D}.Release|Any CPU.Build.0 = Release|Any CPU
 		{28503742-A069-4DDD-B842-74D5154D8C2D}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{1C1AFD37-0FF4-4625-AA82-88944FC3B440}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1C1AFD37-0FF4-4625-AA82-88944FC3B440}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1C1AFD37-0FF4-4625-AA82-88944FC3B440}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{1C1AFD37-0FF4-4625-AA82-88944FC3B440}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1C1AFD37-0FF4-4625-AA82-88944FC3B440}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
