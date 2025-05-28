@@ -36,7 +36,7 @@ namespace EasySave.Maui.Services
             _ = Task.Run(() => { ListenToClient(socket); });
 
         }
-
+         
         public async Task ListenToClient(Socket client)
         {
             byte[] buffer = new byte[1024];
