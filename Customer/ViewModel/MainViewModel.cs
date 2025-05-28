@@ -5,9 +5,13 @@ using System.Linq;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
+
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Customer.Services;    
+using Customer.Services;
+using CommunityToolkit.Maui.Alerts;
+using CommunityToolkit.Maui.Core;
+using Customer.Model;   
 
 namespace Customer.ViewModel
 {
@@ -17,17 +21,22 @@ namespace Customer.ViewModel
         private Socket? socket;
 
         [ObservableProperty]
-        private ObservableCollection<string> messages = new ObservableCollection<string>();
-
-        [ObservableProperty]
         bool isVisibleConnect;
 
         [ObservableProperty]
         bool isVisibleDisconnect;
 
+        [ObservableProperty]
+        private BackupJob backupJobInfo;
+
+        [ObservableProperty]
+        private double progressBarValue;
+
+
         public MainViewModel(WebSocketService webSocketService) {
             _webSocketService = webSocketService;
 
+            _webSocketService.ProgressUpdated += OnMessageReceived;
             isVisibleConnect = true;
             isVisibleDisconnect = false;
 
@@ -43,7 +52,9 @@ namespace Customer.ViewModel
             {
                 IsVisibleConnect = false;
                 IsVisibleDisconnect = true;
-                Messages.Add("Connected to server successfully.");
+                Toast.Make("Connected to server successfully.", ToastDuration.Short).Show();
+
+
             }
         }
 
@@ -89,9 +100,19 @@ namespace Customer.ViewModel
                 {
                     IsVisibleConnect = true;
                     IsVisibleDisconnect = false;
+                    Toast.Make("Disconnect to server successfully.", ToastDuration.Short).Show();
                 }
             }
 
+        }
+
+        private void OnMessageReceived(BackupJob job, double progress)
+        {
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                backupJobInfo = job;
+                progressBarValue = progress;
+            });
         }
     }
 }

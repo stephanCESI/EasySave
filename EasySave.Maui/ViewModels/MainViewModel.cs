@@ -13,6 +13,7 @@ namespace EasySave.Maui.ViewModels;
 public partial class MainViewModel : ObservableObject
 {
     private readonly BackupService _backupService;
+    private readonly WebSocketService _webSocketService;
     private readonly LocalizationService _localizationService;
     
 
@@ -208,10 +209,10 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     public string selectedJobNames;
 
-    public MainViewModel(BackupService backupService, LocalizationService localizationService)
+    public MainViewModel(BackupService backupService, LocalizationService localizationService, WebSocketService webSocketService)
     {
         _backupService = backupService;
-
+        _webSocketService = webSocketService;
         _localizationService = localizationService;
         LoadJobs();
         LoadParameters();
@@ -228,7 +229,7 @@ public partial class MainViewModel : ObservableObject
 
         var settings = AppSettings.Load();
         Extensions = new ObservableCollection<string>(settings.EncryptExtensions);
-
+        _webSocketService = webSocketService;
     }
 
     public void LoadJobs()
@@ -366,6 +367,8 @@ public partial class MainViewModel : ObservableObject
                 }
             });
 
+            _webSocketService.BroadcastJob(job, ProgressBarValue);
+
             var task = Task.Run(() =>
             {
                 _backupService.RunBackupJob(job, IsCryptChecked, progress);
@@ -417,6 +420,8 @@ public partial class MainViewModel : ObservableObject
                     ProgressBarValue = progresses.Values.Average();
                 }
             });
+
+            _webSocketService.BroadcastJob(job, ProgressBarValue);
 
             var task = Task.Run(() =>
             {

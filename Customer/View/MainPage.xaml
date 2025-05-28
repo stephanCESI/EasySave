@@ -3,11 +3,19 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="Customer.MainPage"
              xmlns:viewmodels="clr-namespace:Customer.ViewModel"
+             xmlns:converters="clr-namespace:Customer.Converters"
              x:DataType="viewmodels:MainViewModel">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <converters:ProgressToPercentageConverter x:Key="ProgressToPercentageConverter"/>
+        </ResourceDictionary>
+    </ContentPage.Resources>
 
     <Grid Padding="20" RowSpacing="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
@@ -17,25 +25,16 @@
             <Button TextColor="White" Grid.Column="1" Text="Disconnect" MaximumHeightRequest="50"  BackgroundColor="{StaticResource MainColor}" IsVisible="{Binding IsVisibleDisconnect}" Command="{Binding DisconnectCommand}"/>
         </Grid>
         
-        <ScrollView Grid.Row="1" BackgroundColor="{StaticResource Gray100}">
-            <CollectionView ItemsSource="{Binding Messages}"
-                            SelectionMode="None">
-                <CollectionView.Header>
-                    <Grid Padding="10"
-                        BackgroundColor="{StaticResource MainColor}"
-                        ColumnDefinitions="*">
-                        <Label Text="{Binding ConsoleLog}" TextColor="White" Grid.Column="0" />
-                    </Grid>
-                </CollectionView.Header>
-                <CollectionView.ItemTemplate>
-                    <DataTemplate x:DataType="x:String">
-                        <Label Text="{Binding .}" Grid.Column="1" TextColor="Black"/>
-                    </DataTemplate>
-                </CollectionView.ItemTemplate>
-
-            </CollectionView>
-        </ScrollView>
-        <StackLayout Grid.Row="2" Orientation="Horizontal" Spacing="20" HorizontalOptions="Center">
+        <VerticalStackLayout Grid.Row="2" VerticalOptions="Center" Spacing="15">
+            <Label Text="{Binding BackupJobInfo.Name}"
+            TextColor="Black" 
+            HorizontalOptions="Center"/>
+            <Label Text="{Binding ProgressBarValue, Converter={StaticResource ProgressToPercentageConverter}}"
+           TextColor="Black" 
+           HorizontalOptions="Center"/>
+            <ProgressBar BackgroundColor="Gray" ProgressColor="{StaticResource MainColor}" Progress="{Binding ProgressBarValue}" WidthRequest="300"/>
+        </VerticalStackLayout>
+        <StackLayout Grid.Row="3" Orientation="Horizontal" Spacing="20" HorizontalOptions="Center">
             <Button TextColor="White" Grid.Column="3" Text="Play"  MaximumWidthRequest="200" BackgroundColor="LimeGreen" Command="{Binding PlayJobCommand}"/>
             <Button TextColor="White" Grid.Column="3" Text="Stop"  MaximumWidthRequest="200" BackgroundColor="Tomato"  Command="{Binding StopJobCommand}"/>
             <Button TextColor="White" Grid.Column="3" Text="Delete" MaximumWidthRequest="200" BackgroundColor="Tomato" Command="{Binding DeleteJobCommand}"/>
