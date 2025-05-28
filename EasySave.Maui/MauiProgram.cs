@@ -44,11 +44,18 @@ namespace EasySave.Maui
             // Enregistrer la MainPage
             builder.Services.AddTransient<MainPage>();
 
+            builder.Services.AddSingleton<WebSocketService>();
+
 #if DEBUG
             builder.Logging.AddDebug();
 #endif
 
-            return builder.Build();
+            var app = builder.Build();
+
+            var socketService = app.Services.GetRequiredService<WebSocketService>();
+            socketService.StartServer();
+
+            return app;
         }
     }
 }

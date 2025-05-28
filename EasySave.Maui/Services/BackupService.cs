@@ -155,7 +155,7 @@ namespace EasySave.Maui.Services
 
         }
 
-        public void RunBackupJobByIndex(int index, bool IsCryptChecked)
+        public void RunBackupJobByIndex(int index, bool IsCryptChecked, IProgress<double> progressReporter = null)
         {
             try
             {
@@ -171,11 +171,11 @@ namespace EasySave.Maui.Services
                 job.LastRun = DateTime.Now;
                 UpdateState(job);
 
-                PerformBackup(job, IsCryptChecked);
+                PerformBackup(job, IsCryptChecked, progressReporter);
                 job.IsActive = false;
                 UpdateState(job);
 
-                LoadJobsFromFile();
+                //LoadJobsFromFile(); n'actualise pas
             }
             catch (Exception ex)
             {
@@ -183,7 +183,7 @@ namespace EasySave.Maui.Services
             }
         }
 
-        public void RunBackupJob(BackupJob job, bool IsCryptChecked)
+        public void RunBackupJob(BackupJob job, bool IsCryptChecked, IProgress<double> progressReporter = null)
         {
             try
             {
@@ -192,13 +192,13 @@ namespace EasySave.Maui.Services
                 job.IsActive = true;
                 job.LastRun = DateTime.Now;
 
-                PerformBackup(job, IsCryptChecked);
+                PerformBackup(job, IsCryptChecked, progressReporter);
                 UpdateState(job);
 
                 job.IsActive = false;
                 UpdateState(job);
 
-                LoadJobsFromFile();
+                //LoadJobsFromFile(); n'actualise pas
             }
             catch (Exception ex)
             {
@@ -219,13 +219,14 @@ namespace EasySave.Maui.Services
             try
             {
                 string jsonContent = JsonConvert.SerializeObject(_backupJobs, Formatting.Indented);
-                File.WriteAllText(_backUpFilePath, jsonContent);
+                File.WriteAllTextAsync(_backUpFilePath, jsonContent);
             }
             catch (Exception ex)
             {
                 Toast.Make(ex.Message, ToastDuration.Short).Show();
             }
         }
+
 
         public void ListBackupJobs()
         {
@@ -262,7 +263,7 @@ namespace EasySave.Maui.Services
             return hash1.SequenceEqual(hash2);
         }
 
-        private void PerformBackup(BackupJob job, bool IsCryptChecked)
+        private void PerformBackup(BackupJob job, bool IsCryptChecked, IProgress<double> progressReporter)
         {
             // var globalStopwatch = Stopwatch.StartNew(); 
             // ConcurrentDictionary<int, int> threadUsage = new ConcurrentDictionary<int, int>();
@@ -438,6 +439,16 @@ namespace EasySave.Maui.Services
                         {
                             BackupController.LargeFileSemaphore.Release();
                         }
+                        int processed;
+                        lock (lockObj)
+                        {
+                            processedFiles++;
+                            processed = processedFiles;
+                        }
+                        double progress = (double)processed / totalFiles;
+                        progressReporter?.Report(progress);
+
+                        Debug.WriteLine($"Progression : {progress * 100:0.00} %");
                     }
                 });
 

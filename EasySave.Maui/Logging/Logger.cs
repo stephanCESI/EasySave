@@ -21,7 +21,7 @@ namespace EasySave.Maui.Logging
         {
             var logEntry = new LogEntry(name, fileSource, fileTarget, fileSize, fileTransferTime, DateTime.Now, encryptionTime, jobStopped);
             _logWriter.WriteLog(logEntry);
-            System.Diagnostics.Debug.WriteLine($"Log créé pour le fichier : {fileSource} -> {fileTarget}");
+            //System.Diagnostics.Debug.WriteLine($"Log créé pour le fichier : {fileSource} -> {fileTarget}");
         }
     }
 }
