@@ -55,7 +55,7 @@
                 </Grid.RowDefinitions>
                 <CollectionView ItemsSource="{Binding Jobs}" 
                         SelectionMode="Multiple" 
-                        SelectionChanged="OnSelectionChanged"
+                        SelectedItems="{Binding SelectedJobs}"
                         Background="{StaticResource Gray100}">
 
                     <CollectionView.Header>

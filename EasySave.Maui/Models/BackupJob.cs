@@ -14,10 +14,10 @@ namespace EasySave.Maui.Models
         public double Progress { get; set; }
 
         [JsonIgnore]
-        public bool IsUserPaused { get; private set; } = false;
+        public bool IsUserPaused { get; set; } = false;
 
         [JsonIgnore]
-        public bool IsSystemPaused { get; private set; } = false; // Pause due au logiciel métier
+        public bool IsSystemPaused { get; set; } = false; // Pause due au logiciel métier
 
         [JsonIgnore] 
         public ManualResetEventSlim PauseSignal { get; } = new ManualResetEventSlim(true); // true = non en pause au début
