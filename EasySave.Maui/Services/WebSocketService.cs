@@ -35,6 +35,22 @@ namespace EasySave.Maui.Services
             IPEndPoint clientEndPoint = (IPEndPoint)clientSocket.RemoteEndPoint ;
             _ = Task.Run(() => { ListenToClient(socket); });
 
+        public void Disconnect(Socket client)
+        {
+            //if (_connectedClients.TryRemove(client, out var tokenSource))
+            //{
+            //    try
+            //    {
+            //        tokenSource.Cancel();
+            //        client.Shutdown(SocketShutdown.Both);
+            //        client.Close();
+            //        Console.WriteLine($"Client {client.RemoteEndPoint} déconnecté.");
+            //    }
+            //    catch (Exception ex)
+            //    {
+            //        Console.WriteLine($"Erreur lors de la déconnexion de {client.RemoteEndPoint} : {ex.Message}");
+            //    }
+            //}
         }
 
         public async Task ListenToClient(Socket client)
