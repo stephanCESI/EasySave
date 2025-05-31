@@ -22,11 +22,11 @@ namespace EasySave.Maui.Utils
                 }
 
                 File.Copy(source, target, overwrite);
-                Console.WriteLine($"Fichier copié : {source} -> {target}");
+                //System.Diagnostics.Debug.WriteLine($"Fichier copié : {source} -> {target}");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Erreur lors de la copie du fichier '{source}': {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Erreur lors de la copie du fichier '{source}': {ex.Message}");
             }
         }
 
@@ -37,12 +37,12 @@ namespace EasySave.Maui.Utils
                 if (File.Exists(path))
                 {
                     File.Delete(path);
-                    Console.WriteLine($"Fichier supprimé : {path}");
+                    System.Diagnostics.Debug.WriteLine($"Fichier supprimé : {path}");
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Erreur lors de la suppression du fichier '{path}': {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Erreur lors de la suppression du fichier '{path}': {ex.Message}");
             }
         }
 
@@ -54,7 +54,7 @@ namespace EasySave.Maui.Utils
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Erreur lors de la récupération de la taille du fichier : {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Erreur lors de la récupération de la taille du fichier : {ex.Message}");
                 return -1;
             }
         }
@@ -67,7 +67,7 @@ namespace EasySave.Maui.Utils
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Erreur lors de la récupération de la date de modification : {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Erreur lors de la récupération de la date de modification : {ex.Message}");
                 return DateTime.MinValue;
             }
         }

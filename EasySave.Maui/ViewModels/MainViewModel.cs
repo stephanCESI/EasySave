@@ -7,8 +7,7 @@ using EasySave.Maui.Utils;
 using System.Collections.ObjectModel;
 using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Maui.Core;
-
-
+using System.Diagnostics;
 
 namespace EasySave.Maui.ViewModels;
 public partial class MainViewModel : ObservableObject
@@ -19,6 +18,8 @@ public partial class MainViewModel : ObservableObject
 
 
     public ObservableCollection<BackupJob> Jobs { get; } = new();
+
+    public ObservableCollection<BackupJob> ActiveJobs { get; } = new();
 
     [ObservableProperty]
     private string jobName;
@@ -64,6 +65,9 @@ public partial class MainViewModel : ObservableObject
 
     [ObservableProperty]
     private bool isCryptChecked;
+
+    [ObservableProperty]
+    private double progressBarValue;
 
     [ObservableProperty]
     private ObservableCollection<string> extensions = new();
@@ -234,6 +238,25 @@ public partial class MainViewModel : ObservableObject
             Jobs.Add(job);
     }
 
+
+    [RelayCommand]
+    private void PauseJob()
+    {
+        Debug.WriteLine("PAUSE");
+    }
+
+    [RelayCommand]
+    private void RestartJob()
+    {
+        Debug.WriteLine("RESTART");
+    }
+
+    [RelayCommand]
+    private void StopJob()
+    {
+        Debug.WriteLine("STOP");
+    }
+
     [RelayCommand]
     private void OpenAddJobPopUp()
     {
@@ -258,8 +281,6 @@ public partial class MainViewModel : ObservableObject
     private void OpenPopUpCreateSelection()
     {
         IsVisibleCreateSelection = true;
-
-
     }
 
     [RelayCommand]
@@ -275,7 +296,6 @@ public partial class MainViewModel : ObservableObject
         IsVisibleDeleteJob = false;
         IsVisibleCreateSelection = false;
 
-
         IsVisibleParameters = false;
     }
 
@@ -290,8 +310,6 @@ public partial class MainViewModel : ObservableObject
 
         }
         
-        
-
         var cleanedSourcePath = SourcePath.Trim('"');
         var cleanedTargetPath = TargetPath.Trim('"');
 
@@ -319,28 +337,108 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void RunSelectedJobs()
+    private async Task RunSelectedJobs()
     {
         if (SelectedJobs == null || SelectedJobs.Count == 0)
             return;
 
+        var tasks = new List<Task>();
+        var progresses = new Dictionary<BackupJob, double>();
+
+        Device.BeginInvokeOnMainThread(() =>
+        {
+            foreach (var job in SelectedJobs)
+            {
+                if (!ActiveJobs.Contains(job))
+                    ActiveJobs.Add(job);
+            }
+        });
+
         foreach (var job in SelectedJobs.ToList())
         {
-            _backupService.RunBackupJob(job, IsCryptChecked);
+            var progress = new Progress<double>(value =>
+            {
+                lock (progresses)
+                {
+                    progresses[job] = value;
+
+                    ProgressBarValue = progresses.Values.Average();
+                }
+            });
+
+            var task = Task.Run(() =>
+            {
+                _backupService.RunBackupJob(job, IsCryptChecked, progress);
+            });
+
+            tasks.Add(task);
         }
+
+        await Task.WhenAll(tasks);
+
+        Device.BeginInvokeOnMainThread(() =>
+        {
+            foreach (var job in SelectedJobs)
+            {
+                ActiveJobs.Remove(job);
+            }
+
+            ProgressBarValue = 0;
+        });
     }
 
+
+
     [RelayCommand]
-    private void RunAllJobs()
+    private async Task RunAllJobs()
     {
         if (Jobs == null || Jobs.Count == 0)
             return;
 
+        var tasks = new List<Task>();
+        var progresses = new Dictionary<BackupJob, double>();
+
+        Device.BeginInvokeOnMainThread(() =>
+        {
+            foreach (var job in Jobs)
+            {
+                if (!ActiveJobs.Contains(job))
+                    ActiveJobs.Add(job);
+            }
+        });
+
         foreach (var job in Jobs)
         {
-            _backupService.RunBackupJob(job, IsCryptChecked);
+            var progress = new Progress<double>(value =>
+            {
+                lock (progresses)
+                {
+                    progresses[job] = value;
+                    ProgressBarValue = progresses.Values.Average();
+                }
+            });
+
+            var task = Task.Run(() =>
+            {
+                _backupService.RunBackupJob(job, IsCryptChecked, progress);
+            });
+
+            tasks.Add(task);
         }
+
+        await Task.WhenAll(tasks);
+
+        Device.BeginInvokeOnMainThread(() =>
+        {
+            foreach (var job in Jobs)
+            {
+                ActiveJobs.Remove(job);
+            }
+            ProgressBarValue = 0;
+        });
     }
+
+
 
     [RelayCommand]
     private void ToggleLogFileType(bool isXml)
@@ -352,16 +450,14 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void CreateSelectionJobs()
+    private async Task CreateSelectionJobs()
     {
-        var selectedJobs = new List<int>();
-
+        var selectedJobsIndices = new List<int>();
 
         if (string.IsNullOrWhiteSpace(SelectedJobsText))
             return;
 
         var cleanedText = SelectedJobsText.Replace(" ", "");
-
         var parts = cleanedText.Split('-');
 
         foreach (var part in parts)
@@ -374,25 +470,77 @@ public partial class MainViewModel : ObservableObject
                     int.TryParse(range[1], out int end))
                 {
                     for (int i = start; i <= end; i++)
-                        selectedJobs.Add(i);
+                        selectedJobsIndices.Add(i);
                 }
             }
             else if (int.TryParse(part, out int number))
             {
-                
-                selectedJobs.Add(number);
+                selectedJobsIndices.Add(number);
             }
-            
         }
+
+        var tasks = new List<Task>();
+        var progresses = new Dictionary<BackupJob, double>();
+        var selectedJobs = new List<BackupJob>();
+
+        foreach (var index in selectedJobsIndices)
+        {
+            BackupJob job = null;
+            if (index > 0 && index <= Jobs.Count)
+            {
+                job = Jobs[index - 1];
+            }
+
+            if (job == null)
+                continue;
+
+            selectedJobs.Add(job);
+        }
+
+        Device.BeginInvokeOnMainThread(() =>
+        {
+            foreach (var job in selectedJobs)
+            {
+                if (!ActiveJobs.Contains(job))
+                    ActiveJobs.Add(job);
+            }
+        });
 
         foreach (var job in selectedJobs)
         {
-            _backupService.RunBackupJobByIndex(job, IsCryptChecked);
+            var progress = new Progress<double>(value =>
+            {
+                lock (progresses)
+                {
+                    progresses[job] = value;
+                    ProgressBarValue = progresses.Values.Average();
+                }
+            });
+
+            var task = Task.Run(() =>
+            {
+                _backupService.RunBackupJob(job, IsCryptChecked, progress);
+            });
+
+            tasks.Add(task);
         }
 
+        await Task.WhenAll(tasks);
+
+        Device.BeginInvokeOnMainThread(() =>
+        {
+            foreach (var job in selectedJobs)
+            {
+                ActiveJobs.Remove(job);
+            }
+            ProgressBarValue = 0;
+        });
+
         IsVisibleCreateSelection = false;
-        SelectedJobsText = "" ;
+        SelectedJobsText = "";
     }
+
+
 
     [RelayCommand]
     private void AddExtension(string extension)

@@ -14,6 +14,7 @@ using System.Text;
 using CommunityToolkit.Maui.Core;
 using CommunityToolkit.Maui.Alerts;
 using System.Diagnostics;
+using System.Collections.Concurrent;
 
 
 namespace EasySave.Maui.Services
@@ -28,6 +29,9 @@ namespace EasySave.Maui.Services
         private readonly string _logDirectory;
         private readonly StateManager _stateManager;
         private readonly string _backUpFilePath;
+        private static ConcurrentDictionary<string, bool> RemainingPriorityFiles = new();
+        private static SemaphoreSlim LargeFileSemaphore = new(1, 1);
+
 
         public BackupService(Logger logger, LocalizationService localizationService)
         {
@@ -62,7 +66,7 @@ namespace EasySave.Maui.Services
             }
             catch (Exception ex)
             {
-                System.Console.WriteLine(ex.Message);
+                System.Diagnostics.Debug.WriteLine(ex.Message);
             }
         }
 
@@ -86,7 +90,7 @@ namespace EasySave.Maui.Services
             }
             catch (Exception ex)
             {
-                System.Console.WriteLine(ex.Message);
+                System.Diagnostics.Debug.WriteLine(ex.Message);
             }
         }
 
@@ -129,7 +133,7 @@ namespace EasySave.Maui.Services
             {
                 Toast.Make(ex.Message, ToastDuration.Short).Show();
             }
-            
+
         }
 
         public void DeleteBackupJobByName(string name)
@@ -144,14 +148,14 @@ namespace EasySave.Maui.Services
                     Toast.Make($"Le job {job.Name} a été supprimé avec succès.", ToastDuration.Short).Show();
                 }
             }
-            catch (Exception ex )
+            catch (Exception ex)
             {
                 Toast.Make(ex.Message, ToastDuration.Short).Show();
             }
-            
+
         }
 
-        public void RunBackupJobByIndex(int index, bool IsCryptChecked)
+        public void RunBackupJobByIndex(int index, bool IsCryptChecked, IProgress<double> progressReporter = null)
         {
             try
             {
@@ -167,19 +171,19 @@ namespace EasySave.Maui.Services
                 job.LastRun = DateTime.Now;
                 UpdateState(job);
 
-                PerformBackup(job, IsCryptChecked);
+                PerformBackup(job, IsCryptChecked, progressReporter);
                 job.IsActive = false;
                 UpdateState(job);
 
-                LoadJobsFromFile();
+                //LoadJobsFromFile(); n'actualise pas
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Toast.Make(ex.Message, ToastDuration.Short).Show();
             }
         }
 
-        public void RunBackupJob(BackupJob job, bool IsCryptChecked)
+        public void RunBackupJob(BackupJob job, bool IsCryptChecked, IProgress<double> progressReporter = null)
         {
             try
             {
@@ -188,19 +192,19 @@ namespace EasySave.Maui.Services
                 job.IsActive = true;
                 job.LastRun = DateTime.Now;
 
-                PerformBackup(job, IsCryptChecked);
+                PerformBackup(job, IsCryptChecked, progressReporter);
                 UpdateState(job);
 
                 job.IsActive = false;
                 UpdateState(job);
 
-                LoadJobsFromFile();
+                //LoadJobsFromFile(); n'actualise pas
             }
             catch (Exception ex)
             {
                 Toast.Make(ex.Message, ToastDuration.Short).Show();
             }
-            
+
         }
 
         public void UpdateState(BackupJob newJob)
@@ -215,13 +219,14 @@ namespace EasySave.Maui.Services
             try
             {
                 string jsonContent = JsonConvert.SerializeObject(_backupJobs, Formatting.Indented);
-                File.WriteAllText(_backUpFilePath, jsonContent);
+                File.WriteAllTextAsync(_backUpFilePath, jsonContent);
             }
             catch (Exception ex)
             {
                 Toast.Make(ex.Message, ToastDuration.Short).Show();
             }
         }
+
 
         public void ListBackupJobs()
         {
@@ -234,7 +239,6 @@ namespace EasySave.Maui.Services
 
             foreach (var job in _backupJobs)
             {
-                System.Console.WriteLine();
                 index++;
             }
         }
@@ -259,8 +263,13 @@ namespace EasySave.Maui.Services
             return hash1.SequenceEqual(hash2);
         }
 
-        private void PerformBackup(BackupJob job, bool IsCryptChecked)
+        private void PerformBackup(BackupJob job, bool IsCryptChecked, IProgress<double> progressReporter)
         {
+            // var globalStopwatch = Stopwatch.StartNew(); 
+            // ConcurrentDictionary<int, int> threadUsage = new ConcurrentDictionary<int, int>();
+            // ConcurrentDictionary<int, long> threadFileSizes = new ConcurrentDictionary<int, long>();
+
+
             try
             {
                 if (!Directory.Exists(job.SourcePath))
@@ -297,19 +306,68 @@ namespace EasySave.Maui.Services
 
                 _stateManager.UpdateState(state);
 
+                object lockObj = new object();
+
+                var parallelOptions = new ParallelOptions
+                {
+                    MaxDegreeOfParallelism = Math.Max(2, Environment.ProcessorCount - 1)
+                };
+
+                var priorityExtensions = settings.PriorityExtensions?.Select(e => e.ToLower()).ToList() ?? new List<string>();
+
+                long maxFileSizeBytes = 400 * 1024;
+                if (settings.FileMaxSizes?.FirstOrDefault() is string maxSizeStr && long.TryParse(maxSizeStr, out long maxSizeKo))
+                {
+                    maxFileSizeBytes = maxSizeKo * 1024;
+                }
+
                 foreach (string file in files)
                 {
+                    if (priorityExtensions.Contains(Path.GetExtension(file).ToLower()))
+                    {
+                        RemainingPriorityFiles.TryAdd(file, true);
+                    }
+                }
+
+                Parallel.ForEach(files, parallelOptions, file =>
+                {
+                    int threadId = Thread.CurrentThread.ManagedThreadId;
+
+                    string extension = Path.GetExtension(file).ToLower();
+                    bool isPriorityFile = priorityExtensions.Contains(extension);
+
+                    while (!isPriorityFile && BackupController.RemainingPriorityFiles.Any(kvp => kvp.Value))
+                    {
+                        Thread.Sleep(100);
+                    }
+
                     long fileSize = new FileInfo(file).Length;
+                    bool isLargeFile = fileSize > maxFileSizeBytes;
+
+                    if (isLargeFile)
+                    {
+                        BackupController.LargeFileSemaphore.Wait();
+                    }
+
                     if (IsBusinessSoftwareRunning(businessSoftwares))
                     {
                         Toast.Make("Un logiciel métier est en cours d'exécution. Sauvegarde annulée.", ToastDuration.Short).Show();
-                        _logger.LogBackupAction(job.Name, job.SourcePath, job.TargetPath, fileSize, _timer.GetElapsedMilliseconds(), 0, true);
+                        lock (lockObj)
+                        {
+                            _logger.LogBackupAction(job.Name, job.SourcePath, job.TargetPath, fileSize, _timer.GetElapsedMilliseconds(), 0, true);
+                        }
+
+                        if (isLargeFile)
+                        {
+                            BackupController.LargeFileSemaphore.Release();
+                        }
+
                         return;
                     }
 
                     string relativePath = Path.GetRelativePath(job.SourcePath, file);
                     string destinationFile = Path.Combine(job.TargetPath, relativePath);
-                    bool shouldEncrypt = IsCryptChecked && encryptExtensions.Contains(Path.GetExtension(file).ToLower());
+                    bool shouldEncrypt = IsCryptChecked && encryptExtensions.Contains(extension);
                     bool sourceEncrypted = IsFileEncrypted(file);
                     double encryptionTime = 0;
 
@@ -328,61 +386,82 @@ namespace EasySave.Maui.Services
 
                             if (filesAreIdentical)
                             {
-                                Console.WriteLine($"Fichier inchangé : {file}");
-                                processedFiles++;
-                                continue;
+                                System.Diagnostics.Debug.WriteLine($"Fichier inchangé : {file}");
+                                lock (lockObj) processedFiles++;
+
+                                if (isPriorityFile)
+                                    BackupController.RemainingPriorityFiles[file] = false;
+
+                                return;
                             }
                         }
 
                         _timer.Start();
                         _fileHelper.CopyFile(file, destinationFile);
                         _timer.Stop();
-                        Console.WriteLine($"Fichier copié : {file} -> {destinationFile}");
 
                         if (sourceEncrypted)
                         {
-                            Console.WriteLine($"Fichier déjà chiffré : {file}, aucune action de chiffrement.");
+                            System.Diagnostics.Debug.WriteLine($"Fichier déjà chiffré : {file}, aucune action de chiffrement.");
                         }
                         else if (shouldEncrypt)
                         {
                             try
                             {
-                                var encryptionTimer = System.Diagnostics.Stopwatch.StartNew();
+                                var encryptionTimer = Stopwatch.StartNew();
                                 bool success = cryptoService.EncryptFile(destinationFile, destinationFile);
                                 encryptionTimer.Stop();
 
-                                if (success)
-                                {
-                                    encryptionTime = encryptionTimer.Elapsed.TotalMilliseconds;
-                                    Toast.Make($"Fichier chiffré : {file} -> {destinationFile} (en {encryptionTime} ms)", ToastDuration.Short).Show();
-                                }
-                                else
-                                {
-                                    encryptionTime = -1;
-                                    Toast.Make($"Échec du chiffrement du fichier : {file}", ToastDuration.Short).Show();
-                                }
+                                encryptionTime = success ? encryptionTimer.Elapsed.TotalMilliseconds : -1;
                             }
-                            catch (Exception ex)
+                            catch
                             {
                                 encryptionTime = -1;
-                                Toast.Make($"Erreur lors du chiffrement du fichier {file} : {ex.Message}", ToastDuration.Short).Show();
                             }
                         }
 
-                        processedFiles++;
+                        lock (lockObj)
+                        {
+                            _stateManager.UpdateState(state);
+                            _logger.LogBackupAction(job.Name, job.SourcePath, job.TargetPath, fileSize, _timer.GetElapsedMilliseconds(), encryptionTime, false);
+                        }
+
+                        if (isPriorityFile)
+                            BackupController.RemainingPriorityFiles[file] = false;
                     }
                     catch (Exception ex)
                     {
                         Toast.Make(ex.Message, ToastDuration.Short).Show();
                     }
+                    finally
+                    {
+                        if (isLargeFile)
+                        {
+                            BackupController.LargeFileSemaphore.Release();
+                        }
+                        int processed;
+                        lock (lockObj)
+                        {
+                            processedFiles++;
+                            processed = processedFiles;
+                        }
+                        double progress = (double)processed / totalFiles;
+                        progressReporter?.Report(progress);
 
-                    double progression = (double)processedFiles / totalFiles * 100;
-                    state.NbFilesLeftToDo = totalFiles - processedFiles;
-                    state.Progression = progression;
+                        Debug.WriteLine($"Progression : {progress * 100:0.00} %");
+                    }
+                });
 
-                    _stateManager.UpdateState(state);
-                    _logger.LogBackupAction(job.Name, job.SourcePath, job.TargetPath, fileSize, _timer.GetElapsedMilliseconds(), encryptionTime, false);
-                }
+
+                // globalStopwatch.Stop(); System.Diagnostics.Debug.WriteLine($"Sauvegarde terminée en {globalStopwatch.Elapsed.TotalSeconds:F2} secondes.");
+                // System.Diagnostics.Debug.WriteLine($"Nombre de threads utilisés : {threadUsage.Count}");
+
+                // foreach (var kvp in threadUsage.OrderBy(kvp => kvp.Key))
+                // {
+                // long sizeInBytes = threadFileSizes.TryGetValue(kvp.Key, out long totalSize) ? totalSize : 0;
+                // string sizeFormatted = FormatBytes(sizeInBytes);
+                // System.Diagnostics.Debug.WriteLine($"Thread {kvp.Key} a traité {kvp.Value} fichier(s), taille cumulée : {sizeFormatted}");
+                // }
 
                 Toast.Make($"Le job {job.Name} a été réalisé avec succès.", ToastDuration.Short).Show();
                 state.State = "END";
@@ -391,9 +470,26 @@ namespace EasySave.Maui.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Erreur lors de la sauvegarde : {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Erreur lors de la sauvegarde : {ex.Message}");
             }
         }
+
+        /*
+        private string FormatBytes(long bytes)
+        {
+            string[] sizes = { "B", "KB", "MB", "GB", "TB" };
+            double len = bytes;
+            int order = 0;
+            while (len >= 1024 && order < sizes.Length - 1)
+            {
+                order++;
+                len /= 1024;
+            }
+
+            return $"{len:0.##} {sizes[order]}";
+        }
+        */
+
 
         private bool IsBusinessSoftwareRunning(List<string> softwareNames)
         {
@@ -404,7 +500,7 @@ namespace EasySave.Maui.Services
                     var processes = Process.GetProcessesByName(softwareName);
                     if (processes.Any())
                     {
-                        Console.WriteLine($"Logiciel métier détecté : {softwareName}");
+                        System.Diagnostics.Debug.WriteLine($"Logiciel métier détecté : {softwareName}");
                         return true;
                     }
                 }
@@ -412,7 +508,7 @@ namespace EasySave.Maui.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Erreur lors de la vérification des logiciels métiers : {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Erreur lors de la vérification des logiciels métiers : {ex.Message}");
                 return false;
             }
         }
@@ -439,7 +535,7 @@ namespace EasySave.Maui.Services
             }
             catch (Exception ex)
             {
-                System.Console.WriteLine($"Erreur lors de la vérification du chiffrement du fichier {filePath} : {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Erreur lors de la vérification du chiffrement du fichier {filePath} : {ex.Message}");
                 return false;
             }
         }
@@ -459,4 +555,15 @@ namespace EasySave.Maui.Services
         }
 
     }
+
+
+    public static class BackupController
+    {
+        // Stocke l'état de chaque fichier prioritaire (true = en attente, false = terminé)
+        public static ConcurrentDictionary<string, bool> RemainingPriorityFiles { get; } = new();
+
+        // Contrôle le nombre de fichiers "lourds" (> maxFileSize) copiés en même temps
+        public static SemaphoreSlim LargeFileSemaphore { get; } = new(1, 1);
+    }
+
 }

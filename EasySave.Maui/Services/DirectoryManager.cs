@@ -18,16 +18,16 @@ namespace EasySave.Maui.Services
                 if (!Directory.Exists(path))
                 {
                     Directory.CreateDirectory(path);
-                    Console.WriteLine($"Répertoire créé : {path}");
+                    System.Diagnostics.Debug.WriteLine($"Répertoire créé : {path}");
                 }
                 else
                 {
-                    Console.WriteLine($"Le répertoire existe déjà : {path}");
+                    System.Diagnostics.Debug.WriteLine($"Le répertoire existe déjà : {path}");
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Erreur lors de la création du répertoire : {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Erreur lors de la création du répertoire : {ex.Message}");
             }
         }
 
@@ -39,7 +39,7 @@ namespace EasySave.Maui.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Erreur lors de la récupération des fichiers : {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Erreur lors de la récupération des fichiers : {ex.Message}");
                 return Array.Empty<string>();
             }
         }
@@ -52,7 +52,7 @@ namespace EasySave.Maui.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Erreur lors de la récupération des sous-répertoires : {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Erreur lors de la récupération des sous-répertoires : {ex.Message}");
                 return Array.Empty<string>();
             }
         }

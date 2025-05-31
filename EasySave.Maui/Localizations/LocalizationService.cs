@@ -41,13 +41,13 @@ namespace EasySave.Maui.Localizations
                     }
                     else
                     {
-                        Console.WriteLine($"Fichier de localisation '{filePath}' introuvable.");
+                        System.Diagnostics.Debug.WriteLine($"Fichier de localisation '{filePath}' introuvable.");
                     }
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Erreur lors du chargement des localisations : {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Erreur lors du chargement des localisations : {ex.Message}");
             }
         }
 
@@ -59,7 +59,7 @@ namespace EasySave.Maui.Localizations
             }
             else
             {
-                Console.WriteLine($"Langue '{language}' non trouvée. Utilisation de la langue par défaut.");
+                System.Diagnostics.Debug.WriteLine($"Langue '{language}' non trouvée. Utilisation de la langue par défaut.");
                 _currentLanguage = "en";
             }
         }

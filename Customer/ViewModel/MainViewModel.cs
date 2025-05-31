@@ -74,6 +74,7 @@ namespace Customer.ViewModel
             if (socket != null)
             {
                 _webSocketService.SendMessage(socket, "start");
+
             }
         }
 

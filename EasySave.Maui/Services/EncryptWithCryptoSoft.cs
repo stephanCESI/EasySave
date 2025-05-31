@@ -35,18 +35,18 @@ namespace EasySave.Maui.Services
 
                 if (process.ExitCode == 1)
                 {
-                    Console.WriteLine($"Chiffrement réussi : {sourceFile} -> {encryptedFile}");
+                    System.Diagnostics.Debug.WriteLine($"Chiffrement réussi : {sourceFile} -> {encryptedFile}");
                     return true;
                 }
                 else
                 {
-                    Console.WriteLine($"Erreur de chiffrement ({process.ExitCode}): {output}");
+                    System.Diagnostics.Debug.WriteLine($"Erreur de chiffrement ({process.ExitCode}): {output}");
                     return false;
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Exception lors du chiffrement : {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Exception lors du chiffrement : {ex.Message}");
                 return false;
             }
         }

@@ -10,6 +10,7 @@
     <ContentPage.Resources>
         <ResourceDictionary>
             <converters:JobIndexConverter x:Key="JobIndexConverter"/>
+            <converters:ProgressToPercentageConverter x:Key="ProgressToPercentageConverter"/>
         </ResourceDictionary>
     </ContentPage.Resources>
 
@@ -48,15 +49,19 @@
                     <ColumnDefinition Width="0.25*"/>
                     <ColumnDefinition Width="auto"/>
                 </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
                 <CollectionView ItemsSource="{Binding Jobs}" 
-                SelectionMode="Multiple" 
-                SelectionChanged="OnSelectionChanged"
-                Background="{StaticResource Gray100}">
+                        SelectionMode="Multiple" 
+                        SelectionChanged="OnSelectionChanged"
+                        Background="{StaticResource Gray100}">
 
                     <CollectionView.Header>
                         <Grid Padding="10"
-              BackgroundColor="{StaticResource MainColor}"
-              ColumnDefinitions="*,*,*,*,*,*">
+                              BackgroundColor="{StaticResource MainColor}"
+                              ColumnDefinitions="*,*,*,*,*,*">
                             <Label Text="{Binding NumberTab}" TextColor="White" Grid.Column="0" />
                             <Label Text="{Binding NameTab}" TextColor="White" Grid.Column="1" />
                             <Label Text="{Binding SourcePathTab}" TextColor="White" Grid.Column="2" />
@@ -100,7 +105,7 @@
                                 <Label Text="{Binding TargetPath}" Grid.Column="3" TextColor="Black"/>
                                 <Label Text="{Binding Type}" Grid.Column="4" TextColor="Black"/>
                                 <Label Text="{Binding LastRun, StringFormat='{0:dd/MM/yyyy HH:mm}'}" Grid.Column="5" TextColor="Black"/>
-                                
+
                             </Grid>
                         </DataTemplate>
                     </CollectionView.ItemTemplate>
@@ -124,6 +129,83 @@
                     </HorizontalStackLayout>
 
                 </StackLayout>
+                <Grid Grid.Row="1">
+                    <VerticalStackLayout>
+                        <Frame BackgroundColor="{StaticResource MainColor}" BorderColor="{StaticResource MainColor}" CornerRadius="0">
+                            <Label HorizontalOptions="Center" Text="Travaux en cours :"/>
+                        </Frame>
+
+                        <CollectionView ItemsSource="{Binding ActiveJobs}" 
+                            Background="{StaticResource Gray100}">
+
+                            <CollectionView.Header>
+                                <Grid Padding="10"
+                                  BackgroundColor="{StaticResource MainColor}"
+                                  ColumnDefinitions="*,*,*,*,*,*">
+                                    <Label Text="{Binding NumberTab}" TextColor="White" Grid.Column="0" />
+                                    <Label Text="{Binding NameTab}" TextColor="White" Grid.Column="1" />
+                                    <Label Text="{Binding SourcePathTab}" TextColor="White" Grid.Column="2" />
+                                    <Label Text="{Binding DestinationPathTab}" TextColor="White" Grid.Column="3" />
+                                    <Label Text="{Binding BackupTypeTab}" TextColor="White" Grid.Column="4" />
+                                    <Label Text="{Binding LastRunTab}" TextColor="White" Grid.Column="5" />
+                                </Grid>
+                            </CollectionView.Header>
+
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate x:DataType="models:BackupJob">
+                                    <Grid Padding="10" ColumnDefinitions="*,*,*,*,*,*">
+                                        <VisualStateManager.VisualStateGroups>
+                                            <VisualStateGroup x:Name="CommonStates">
+                                                <VisualState x:Name="Normal">
+                                                    <VisualState.Setters>
+                                                        <Setter Property="BackgroundColor" Value="White" />
+                                                    </VisualState.Setters>
+                                                </VisualState>
+                                                <VisualState x:Name="Selected">
+                                                    <VisualState.Setters>
+                                                        <Setter Property="BackgroundColor" Value="{StaticResource MainColor}" />
+                                                    </VisualState.Setters>
+                                                </VisualState>
+                                            </VisualStateGroup>
+                                        </VisualStateManager.VisualStateGroups>
+
+                                        <Label TextColor="{StaticResource Black}" VerticalOptions="Center" Margin="5,0,0,0" Grid.Column="0">
+                                            <Label.Text>
+                                                <MultiBinding
+                                Converter="{StaticResource JobIndexConverter}">
+                                                    <Binding Path="BindingContext.Jobs"
+                                Source="{RelativeSource AncestorType={x:Type ContentPage}}" />
+                                                    <Binding Path="." />
+                                                </MultiBinding>
+                                            </Label.Text>
+                                        </Label>
+
+                                        <Label Text="{Binding Name}" Grid.Column="1" TextColor="Black"/>
+                                        <Label Text="{Binding SourcePath}" Grid.Column="2" TextColor="Black"/>
+                                        <Label Text="{Binding TargetPath}" Grid.Column="3" TextColor="Black"/>
+                                        <Label Text="{Binding Type}" Grid.Column="4" TextColor="Black"/>
+                                        <Label Text="{Binding LastRun, StringFormat='{0:dd/MM/yyyy HH:mm}'}" Grid.Column="5" TextColor="Black"/>
+
+                                    </Grid>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
+                    </VerticalStackLayout>
+
+                </Grid>
+                <Grid Grid.Row="1" Grid.Column="1">
+                    <VerticalStackLayout VerticalOptions="Center" Spacing="15">
+                        <Label Text="{Binding ProgressBarValue, Converter={StaticResource ProgressToPercentageConverter}}"
+                               TextColor="Black" 
+                               HorizontalOptions="Center"/>
+                        <ProgressBar BackgroundColor="Gray" ProgressColor="{StaticResource MainColor}" Progress="{Binding ProgressBarValue}" WidthRequest="300"/>
+                        <HorizontalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="15">
+                            <Button BackgroundColor="{StaticResource MainColor}" Text="Play" TextColor="White" Command="{Binding RestartJobCommand}"></Button>
+                            <Button BackgroundColor="{StaticResource MainColor}" Text="Pause" TextColor="White" Command="{Binding PauseJobCommand}"></Button>
+                            <Button BackgroundColor="{StaticResource MainColor}" Text="Stop" TextColor="White" Command="{Binding StopJobCommand}"></Button>
+                        </HorizontalStackLayout>
+                    </VerticalStackLayout>
+                </Grid>
             </Grid >
         </Grid>
 
@@ -162,8 +244,8 @@
         <Grid  x:Name="PopUpParameters" IsVisible="{Binding IsVisibleParameters}" >
             <Grid BackgroundColor="Black"  Opacity="0.5" ></Grid>
             <Grid  VerticalOptions="Center" HorizontalOptions="Center" 
-      RowSpacing="25"  BackgroundColor="{StaticResource White}" 
-      Padding="20">
+                  RowSpacing="25"  BackgroundColor="{StaticResource White}" 
+                  Padding="20">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
@@ -243,7 +325,7 @@
                         </DataTemplate>
                     </CollectionView.ItemTemplate>
                 </CollectionView>
-                
+
                 <!-- ############################################## -->
 
                 <VerticalStackLayout Grid.Row="1" Grid.Column="2">

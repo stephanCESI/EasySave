@@ -6,7 +6,7 @@ namespace EasySave.Maui.Interfaces
     {
         void CreateBackupJob(string name, string sourcePath, string targetPath, BackupType type);
         void DeleteBackupJobByIndex(int index);
-        void RunBackupJobByIndex(int index, bool IsCryptChecked);
+        void RunBackupJobByIndex(int index, bool IsCryptChecked, IProgress<double> progressReporter = null);
         void ListBackupJobs();
     }
 }

@@ -30,7 +30,7 @@ namespace EasySave.Maui.Utils
                 }
                 else
                 {
-                    Console.WriteLine($"Fichier de configuration '{fullPath}' introuvable. Utilisation des paramètres par défaut.");
+                    System.Diagnostics.Debug.WriteLine($"Fichier de configuration '{fullPath}' introuvable. Utilisation des paramètres par défaut.");
                     return new AppSettings
                     {
                         DefaultLanguage = "en",
@@ -45,7 +45,7 @@ namespace EasySave.Maui.Utils
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Erreur lors du chargement des paramètres : {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Erreur lors du chargement des paramètres : {ex.Message}");
                 return new AppSettings
                 {
                     DefaultLanguage = "en",
