@@ -33,7 +33,7 @@ namespace EasySave.Maui.Services
                 {
                     while (!_serverCancellation.Token.IsCancellationRequested)
                     {
-                        await AcceptConnection(_serverCancellation.Token);
+                        AcceptConnection(_serverCancellation.Token);
                     }
                 });
             }
@@ -45,13 +45,13 @@ namespace EasySave.Maui.Services
 
         private async Task AcceptConnection(CancellationToken serverToken)
         {
-            Socket clientSocket = await listenerSocket.AcceptAsync(serverToken);
+            Socket clientSocket = await listenerSocket!.AcceptAsync(serverToken);
             var clientTokenSource = new CancellationTokenSource();
 
             _connectedClients.TryAdd(clientSocket, clientTokenSource);
             Console.WriteLine($"Client connecté : {clientSocket.RemoteEndPoint}");
 
-            _ = Task.Run(() => ListenToClient(clientSocket, clientTokenSource.Token));
+            _ = Task.Run(() => ListenToClient(clientSocket, clientTokenSource.Token), clientTokenSource.Token);
         }
 
         private async Task ListenToClient(Socket client, CancellationToken token)
@@ -63,11 +63,7 @@ namespace EasySave.Maui.Services
                 while (!token.IsCancellationRequested && client.Connected)
                 {
                     int bytesRead = await client.ReceiveAsync(new ArraySegment<byte>(buffer), SocketFlags.None, token);
-                    if (bytesRead == 0)
-                    {
-                        Disconnect(client);
-                        return;
-                    }
+
 
                     string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
                     Console.WriteLine($"Message reçu de {client.RemoteEndPoint}: {message}");
@@ -75,7 +71,6 @@ namespace EasySave.Maui.Services
                     switch (message.Trim().ToLowerInvariant())
                     {
                         case "play":
-                            // À implémenter
                             break;
 
                         case "stop":
@@ -107,11 +102,12 @@ namespace EasySave.Maui.Services
             }
         }
 
-        public void SendJob(Socket client, BackupJob job, double progress)
+        public void SendJob(Socket socket, BackupJob job, double progress)
         {
-            if (!_connectedClients.ContainsKey(client) || !client.Connected)
+            if (!_connectedClients.TryGetValue(socket, out var cancellationTokenSource) ||
+                cancellationTokenSource.IsCancellationRequested || !socket.Connected)
             {
-                Console.WriteLine($"Client {client.RemoteEndPoint} non trouvé ou déconnecté.");
+                Console.WriteLine($"Client {socket.RemoteEndPoint} non trouvé ou déconnecté.");
                 return;
             }
 
@@ -125,39 +121,48 @@ namespace EasySave.Maui.Services
 
                 string jsonString = JsonSerializer.Serialize(dataToSend);
                 byte[] byteData = Encoding.UTF8.GetBytes(jsonString);
-                client.Send(byteData);
+                socket.Send(byteData);
 
-                Console.WriteLine($"Données envoyées à {client.RemoteEndPoint} : {jsonString}");
+                Console.WriteLine($"Données envoyées à {socket.RemoteEndPoint} : {jsonString}");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Erreur lors de l'envoi à {client.RemoteEndPoint} : {ex.Message}");
+                Console.WriteLine($"Erreur lors de l'envoi à {socket.RemoteEndPoint} : {ex.Message}");
             }
         }
 
         public void BroadcastJob(BackupJob job, double progress)
         {
-            foreach (var client in _connectedClients.Keys)
+            foreach (var item in _connectedClients)
             {
-                SendJob(client, job, progress);
+                var socket = item.Key;
+                var tokenSource = item.Value;
+
+                if (!socket.Connected || tokenSource.IsCancellationRequested)
+                {
+                    Disconnect(socket);
+                    continue;
+                }
+
+                SendJob(socket, job, progress);
             }
         }
 
         public void Disconnect(Socket client)
         {
-            if (_connectedClients.TryRemove(client, out var tokenSource))
-            {
-                try
-                {
-                    tokenSource.Cancel();
-                    client.Shutdown(SocketShutdown.Both);
-                    client.Close();
-                    Console.WriteLine($"Client {client.RemoteEndPoint} déconnecté.");
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Erreur lors de la déconnexion de {client.RemoteEndPoint} : {ex.Message}");
-                }
+            //if (_connectedClients.TryRemove(client, out var tokenSource))
+            //{
+            //    try
+            //    {
+            //        tokenSource.Cancel();
+            //        client.Shutdown(SocketShutdown.Both);
+            //        client.Close();
+            //        Console.WriteLine($"Client {client.RemoteEndPoint} déconnecté.");
+            //    }
+            //    catch (Exception ex)
+            //    {
+            //        Console.WriteLine($"Erreur lors de la déconnexion de {client.RemoteEndPoint} : {ex.Message}");
+            //    }
             }
         }
 
