@@ -1,21 +1,16 @@
-﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
+﻿using CommunityToolkit.Maui.Alerts;
+using CommunityToolkit.Maui.Core;
 using EasySave.Maui.Interfaces;
+using EasySave.Maui.Localizations;
+using EasySave.Maui.Logging;
 using EasySave.Maui.Models;
 using EasySave.Maui.Utils;
-using EasySave.Maui.Logging;
-using EasySave.Maui.Localizations;
-using System.Data;
+using Newtonsoft.Json;
+using System.Collections.Concurrent;
+using System.Diagnostics;
+using EasySave.Maui.Localizations; 
 using System.Security.Cryptography;
 using System.Text;
-using CommunityToolkit.Maui.Core;
-using CommunityToolkit.Maui.Alerts;
-using System.Diagnostics;
-using System.Collections.Concurrent;
-
 
 namespace EasySave.Maui.Services
 {
@@ -29,11 +24,12 @@ namespace EasySave.Maui.Services
         private readonly string _logDirectory;
         private readonly StateManager _stateManager;
         private readonly string _backUpFilePath;
-        private static ConcurrentDictionary<string, bool> RemainingPriorityFiles = new();
-        private static SemaphoreSlim LargeFileSemaphore = new(1, 1);
+
+        // Objet de verrouillage pour synchroniser les accès aux ressources partagées (logger, stateManager) depuis Parallel.ForEach
+        private readonly object _logAndStateLock = new object();
 
 
-        public BackupService(Logger logger, LocalizationService localizationService)
+        public BackupService(Logger logger , LocalizationService localizationService)
         {
             _backupJobs = new List<BackupJob>();
             _fileHelper = new FileHelper();
@@ -66,7 +62,7 @@ namespace EasySave.Maui.Services
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine(ex.Message);
+                System.Diagnostics.Debug.WriteLine($"SaveJobsToFile Error: {ex.Message}");
             }
         }
 
@@ -90,7 +86,7 @@ namespace EasySave.Maui.Services
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine(ex.Message);
+                System.Diagnostics.Debug.WriteLine($"LoadJobsFromFile Error: {ex.Message}");
             }
         }
 
@@ -100,18 +96,17 @@ namespace EasySave.Maui.Services
             {
                 if (_backupJobs.Any(job => job.Name.Equals(name, StringComparison.OrdinalIgnoreCase)))
                 {
+                    MainThread.BeginInvokeOnMainThread(async () => await Toast.Make($"Un job '{name}' existe déjà.", ToastDuration.Short).Show());
                     return;
                 }
-
                 var newJob = new BackupJob(name, sourcePath, targetPath, type);
                 _backupJobs.Add(newJob);
                 SaveJobsToFile();
-                Toast.Make($"Le job {newJob.Name} a été ajouté avec succès.", ToastDuration.Short).Show();
+                MainThread.BeginInvokeOnMainThread(async () => await Toast.Make($"Job '{newJob.Name}' ajouté.", ToastDuration.Short).Show());
             }
-
             catch (Exception ex)
             {
-                Toast.Make(ex.Message, ToastDuration.Short).Show();
+                MainThread.BeginInvokeOnMainThread(async () => await Toast.Make($"Erreur création: {ex.Message}", ToastDuration.Short).Show());
             }
         }
 
@@ -121,19 +116,23 @@ namespace EasySave.Maui.Services
             {
                 if (index < 0 || index >= _backupJobs.Count)
                 {
+                    MainThread.BeginInvokeOnMainThread(async () => await Toast.Make($"Index de job invalide pour suppression : {index}.", ToastDuration.Short).Show());
                     return;
                 }
-
                 var job = _backupJobs[index];
+                if (job.IsActive)
+                {
+                    MainThread.BeginInvokeOnMainThread(async () => await Toast.Make($"Job '{job.Name}' actif, ne peut être supprimé.", ToastDuration.Short).Show());
+                    return;
+                }
                 _backupJobs.RemoveAt(index);
                 SaveJobsToFile();
-                Toast.Make($"Le job {job.Name} a été supprimé avec succès.", ToastDuration.Short).Show();
+                MainThread.BeginInvokeOnMainThread(async () => await Toast.Make($"Job '{job.Name}' supprimé.", ToastDuration.Short).Show());
             }
             catch (Exception ex)
             {
-                Toast.Make(ex.Message, ToastDuration.Short).Show();
+                MainThread.BeginInvokeOnMainThread(async () => await Toast.Make($"Erreur suppression: {ex.Message}", ToastDuration.Short).Show());
             }
-
         }
 
         public void DeleteBackupJobByName(string name)
@@ -143,112 +142,25 @@ namespace EasySave.Maui.Services
                 var job = _backupJobs.FirstOrDefault(j => j.Name == name);
                 if (job != null)
                 {
+                    if (job.IsActive)
+                    {
+                        MainThread.BeginInvokeOnMainThread(async () => await Toast.Make($"Job '{job.Name}' actif, ne peut être supprimé.", ToastDuration.Short).Show());
+                        return;
+                    }
                     _backupJobs.Remove(job);
                     SaveJobsToFile();
-                    Toast.Make($"Le job {job.Name} a été supprimé avec succès.", ToastDuration.Short).Show();
+                    MainThread.BeginInvokeOnMainThread(async () => await Toast.Make($"Job '{job.Name}' supprimé.", ToastDuration.Short).Show());
                 }
             }
             catch (Exception ex)
             {
-                Toast.Make(ex.Message, ToastDuration.Short).Show();
+                MainThread.BeginInvokeOnMainThread(async () => await Toast.Make($"Erreur suppression: {ex.Message}", ToastDuration.Short).Show());
             }
-
-        }
-
-        public async Task RunBackupJobAsync(BackupJob job, bool isCryptChecked, CancellationToken cancellationToken, IProgress<double> progressReporter = null)
-        {
-            if (job == null) { System.Diagnostics.Debug.WriteLine("RunBackupJobAsync: job est null."); return; }
-
-
-            var settings = AppSettings.Load();
-            if (IsBusinessSoftwareRunning(settings.Softwares ?? new List<string>()))
-            {
-                await MainThread.InvokeOnMainThreadAsync(() => Toast.Make("Logiciel métier actif. Lancement annulé.", ToastDuration.Long).Show());
-                _logger.LogBackupAction(job.Name, "N/A", "N/A", 0, 0, 0, true);
-                return;
-            }
-
-            job.IsUserPaused = false;
-            job.IsSystemPaused = false;
-            job.PauseSignal.Set();
-            job.IsActive = true;
-            job.LastRun = DateTime.Now;
-            job.Progress = 0;
-            progressReporter?.Report(0);
-
-            UpdateRealTimeStateForJob(job, null, null, 0, 0, job.GetCurrentStatusDisplay());
-            SaveJobsToFile();
-
-            try
-            {
-                await Task.Run(() => PerformBackupInternal(job, isCryptChecked, cancellationToken, progressReporter), cancellationToken);
-            }
-            catch (OperationCanceledException)
-            {
-                System.Diagnostics.Debug.WriteLine($"Job '{job.Name}' annulé via CancellationToken.");
-                await MainThread.InvokeOnMainThreadAsync(() => Toast.Make($"Job '{job.Name}' annulé.", ToastDuration.Short).Show());
-                _logger.LogBackupAction(job.Name, "N/A", "N/A", 0, 0, 0, true);
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Erreur majeure Job '{job.Name}': {ex.Message} \nStackTrace: {ex.StackTrace}");
-                await MainThread.InvokeOnMainThreadAsync(() => Toast.Make($"Erreur Job '{job.Name}': {ex.Message}", ToastDuration.Long).Show());
-                _logger.LogBackupAction(job.Name, "N/A", "N/A", 0, 0, 0, true);
-            }
-            finally
-            {
-                job.NotifyCompletionOrStop();
-                progressReporter?.Report(job.Progress / 100.0);
-                UpdateRealTimeStateForJob(job, null, null, GetTotalFilesForJob(job), GetProcessedFilesForJob(job), job.GetCurrentStatusDisplay());
-                SaveJobsToFile();
-                ClearPriorityFilesForJob(job);
-            }
-        }
-
-        public void UpdateState(BackupJob newJob)
-        {
-            var existingState = _backupJobs.Find(s => s.Name == newJob.Name);
-
-            SaveBackupJson();
-        }
-
-        private void SaveBackupJson()
-        {
-            try
-            {
-                string jsonContent = JsonConvert.SerializeObject(_backupJobs, Formatting.Indented);
-                File.WriteAllTextAsync(_backUpFilePath, jsonContent);
-            }
-            catch (Exception ex)
-            {
-                Toast.Make(ex.Message, ToastDuration.Short).Show();
-            }
-        }
-
-
-        public void ListBackupJobs()
-        {
-            if (!_backupJobs.Any())
-            {
-                return;
-            }
-
-            int index = 1;
-
-            foreach (var job in _backupJobs)
-            {
-                index++;
-            }
-        }
-
-        public IReadOnlyList<BackupJob> GetJobs()
-        {
-            return _backupJobs.AsReadOnly();
         }
 
         private void UpdateRealTimeStateForJob(BackupJob job, string currentFileSource, string currentFileDest, int totalFiles, int filesDone, string explicitStatus = null)
         {
-            if (job == null) return; // Sécurité
+            if (job == null) return;
             var stateEntry = new BackupState(job.Name)
             {
                 SourceFilePath = currentFileSource,
@@ -258,9 +170,11 @@ namespace EasySave.Maui.Services
                 NbFilesLeftToDo = totalFiles - filesDone,
                 Progression = job.Progress
             };
-            _stateManager.UpdateState(stateEntry);
+            lock (_logAndStateLock)
+            {
+                _stateManager.UpdateState(stateEntry);
+            }
         }
-
 
         private int GetTotalFilesForJob(BackupJob job)
         {
@@ -273,8 +187,7 @@ namespace EasySave.Maui.Services
         {
             if (job == null) return 0;
             int total = GetTotalFilesForJob(job);
-            // Gérer le cas où total est 0 pour éviter la division par zéro.
-            if (total == 0) return (job.Progress == 100 ? 0 : 0); // Si 0 fichiers, 0 traités (sauf si marqué 100% pour un job vide "complété")
+            if (total == 0) return (job.Progress == 100 ? 0 : 0);
             return (int)(total * (job.Progress / 100.0));
         }
 
@@ -290,7 +203,8 @@ namespace EasySave.Maui.Services
             }
         }
 
-        #region Méthodes d'Orchestration Pause/Reprise (appelées par ViewModel et BusinessSoftwareMonitor)
+
+        #region Méthodes d'Orchestration Pause/Reprise
         public void RequestUserPauseJob(string jobName)
         {
             var job = _backupJobs.FirstOrDefault(j => j.Name == jobName);
@@ -298,7 +212,6 @@ namespace EasySave.Maui.Services
             {
                 job.RequestUserPause();
                 UpdateRealTimeStateForJob(job, null, null, GetTotalFilesForJob(job), GetProcessedFilesForJob(job), job.GetCurrentStatusDisplay());
-                // _logger.LogSystemEvent($"Tâche '{job.Name}' mise en pause par l'utilisateur."); // Si vous implémentez LogSystemEvent
                 System.Diagnostics.Debug.WriteLine($"ÉVÉNEMENT: Tâche '{job.Name}' mise en pause par l'utilisateur.");
             }
         }
@@ -336,20 +249,127 @@ namespace EasySave.Maui.Services
             }
         }
         #endregion
-        
+
+        public async Task RunBackupJobAsync(BackupJob job, bool isCryptChecked, CancellationToken cancellationToken, IProgress<double> progressReporter = null)
+        {
+            System.Diagnostics.Debug.WriteLine($"Début RunBackupJobAsync pour job: {job?.Name}");
+            if (job == null) { System.Diagnostics.Debug.WriteLine("RunBackupJobAsync: job est null."); return; }
+
+            if (job.IsActive)
+            {
+                await MainThread.InvokeOnMainThreadAsync(() => Toast.Make($"Job '{job.Name}' déjà en cours.", ToastDuration.Short).Show());
+                return;
+            }
+
+            var settings = AppSettings.Load();
+            System.Diagnostics.Debug.WriteLine($"Settings chargés: {settings != null}");
+            if (IsBusinessSoftwareRunning(settings.Softwares ?? new List<string>()))
+            {
+                await MainThread.InvokeOnMainThreadAsync(() => Toast.Make("Logiciel métier actif. Lancement annulé.", ToastDuration.Long).Show());
+                // Utiliser un lock pour le logger si appelé depuis un contexte potentiellement concurrent
+                lock (_logAndStateLock) _logger.LogBackupAction(job.Name, "N/A", "N/A", 0, 0, 0, true);
+                return;
+            }
+
+            System.Diagnostics.Debug.WriteLine("Initialisation des propriétés du job");
+            try
+            {
+                job.ResetPauseStatesForNewRun(); // Utilise la méthode de BackupJob pour réinitialiser
+                job.IsActive = true;
+                job.LastRun = DateTime.Now;
+                job.Progress = 0;
+                progressReporter?.Report(0);
+
+                UpdateRealTimeStateForJob(job, null, null, 0, 0, job.GetCurrentStatusDisplay());
+                SaveJobsToFile();
+
+                System.Diagnostics.Debug.WriteLine("Lancement de PerformBackupInternal");
+                await Task.Run(() => PerformBackupInternal(job, isCryptChecked, cancellationToken, progressReporter), cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                System.Diagnostics.Debug.WriteLine($"Job '{job.Name}' annulé via CancellationToken.");
+                await MainThread.InvokeOnMainThreadAsync(() => Toast.Make($"Job '{job.Name}' annulé.", ToastDuration.Short).Show());
+                lock (_logAndStateLock) _logger.LogBackupAction(job.Name, "N/A", "N/A", 0, 0, 0, true);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Erreur dans RunBackupJobAsync pour '{job.Name}': {ex.Message}\n{ex.StackTrace}");
+                await MainThread.InvokeOnMainThreadAsync(() => Toast.Make($"Erreur Job '{job.Name}': {ex.Message}", ToastDuration.Long).Show());
+                lock (_logAndStateLock) _logger.LogBackupAction(job.Name, "N/A", "N/A", 0, 0, 0, true);
+            }
+            finally
+            {
+                System.Diagnostics.Debug.WriteLine($"Fin RunBackupJobAsync (finally) pour job: {job?.Name}");
+                try
+                {
+                    job.NotifyCompletionOrStop();
+                    progressReporter?.Report(job.Progress / 100.0);
+                    UpdateRealTimeStateForJob(job, null, null, GetTotalFilesForJob(job), GetProcessedFilesForJob(job), job.GetCurrentStatusDisplay());
+                    SaveJobsToFile();
+                    ClearPriorityFilesForJob(job);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Erreur dans le bloc finally de RunBackupJobAsync: {ex.Message}\n{ex.StackTrace}");
+                }
+            }
+        }
+
+        public void UpdateState(BackupJob newJob) 
+        {
+            var existingState = _backupJobs.Find(s => s.Name == newJob.Name); // pas utilisé
+            SaveBackupJson();
+        }
+
+        private void SaveBackupJson() 
+        {
+            try
+            {
+                string jsonContent = JsonConvert.SerializeObject(_backupJobs, Formatting.Indented);
+                File.WriteAllText(_backUpFilePath, jsonContent);
+            }
+            catch (Exception ex)
+            {
+                MainThread.BeginInvokeOnMainThread(async () => await Toast.Make($"Erreur sauvegarde état jobs: {ex.Message}", ToastDuration.Short).Show());
+            }
+        }
+
+
+        public void ListBackupJobs()
+        {
+            if (!_backupJobs.Any())
+            {
+                System.Diagnostics.Debug.WriteLine("Aucun travail de sauvegarde défini.");
+                return;
+            }
+            System.Diagnostics.Debug.WriteLine("--- Liste des Travaux de Sauvegarde ---");
+            for (int i = 0; i < _backupJobs.Count; i++)
+            {
+                var job = _backupJobs[i];
+                System.Diagnostics.Debug.WriteLine($"{i + 1}. {job.Name} ({job.Type}) - Actif: {job.IsActive}");
+            }
+        }
+
+        public IReadOnlyList<BackupJob> GetJobs()
+        {
+            return _backupJobs.AsReadOnly();
+        }
+
         private void PerformBackupInternal(BackupJob job, bool IsCryptChecked, CancellationToken cancellationToken, IProgress<double> progressReporter)
         {
             int totalFiles = 0;
             int processedFilesCount = 0;
-            PerformanceTimer fileProcessTimer = new PerformanceTimer();
+            PerformanceTimer fileProcessTimer = new PerformanceTimer(); 
 
             try
             {
                 if (!Directory.Exists(job.SourcePath))
                 {
-                    _logger.LogBackupAction(job.Name, job.SourcePath, "N/A", 0, 0, 0, true);
+                    lock (_logAndStateLock) _logger.LogBackupAction(job.Name, job.SourcePath, "N/A", 0, 0, 0, true);
                     UpdateRealTimeStateForJob(job, null, null, 0, 0, "ERROR_NO_SOURCE");
-                    job.Progress = 100;
+                    job.Progress = 100; // Marquer comme "terminé" pour ne pas bloquer indéfiniment
+                    progressReporter?.Report(1.0);
                     return;
                 }
                 if (!Directory.Exists(job.TargetPath)) Directory.CreateDirectory(job.TargetPath);
@@ -364,7 +384,7 @@ namespace EasySave.Maui.Services
                     job.Progress = 100;
                     progressReporter?.Report(1.0);
                     UpdateRealTimeStateForJob(job, job.SourcePath, job.TargetPath, 0, 0, "COMPLETED_EMPTY");
-                    MainThread.BeginInvokeOnMainThread(async () => await Toast.Make($"Job '{job.Name}': Source vide, rien à copier.", ToastDuration.Short).Show());
+                    MainThread.BeginInvokeOnMainThread(async () => await Toast.Make($"Job '{job.Name}': Source vide.", ToastDuration.Short).Show());
                     return;
                 }
                 job.Progress = 0;
@@ -376,7 +396,6 @@ namespace EasySave.Maui.Services
                 cancellationToken.ThrowIfCancellationRequested();
                 UpdateRealTimeStateForJob(job, job.SourcePath, job.TargetPath, totalFiles, processedFilesCount, job.GetCurrentStatusDisplay());
 
-                object lockForProcessedCount = new object();
                 var priorityExtensions = settings.PriorityExtensions?.Select(e => e.ToLowerInvariant()).ToList() ?? new List<string>();
                 long maxFileSizeBytes = (settings.FileMaxSizes?.FirstOrDefault() is string mfs && long.TryParse(mfs, out long mfk) ? mfk : 400) * 1024;
 
@@ -405,22 +424,25 @@ namespace EasySave.Maui.Services
                         Thread.Sleep(50);
                     }
 
-                    long currentFileSize = new FileInfo(file).Length;
+                    long currentFileSize = 0;
+                    try { currentFileSize = new FileInfo(file).Length; } catch { /* ignorer si le fichier disparaît */ }
+
                     bool isCurrentFileLarge = currentFileSize > maxFileSizeBytes;
                     bool largeFileSemHeld = false;
                     string destinationFilePath = Path.Combine(job.TargetPath, Path.GetRelativePath(job.SourcePath, file));
                     string destDir = Path.GetDirectoryName(destinationFilePath);
-                    if (!string.IsNullOrEmpty(destDir) && !Directory.Exists(destDir)) Directory.CreateDirectory(destDir);
 
                     try
                     {
+                        if (!string.IsNullOrEmpty(destDir) && !Directory.Exists(destDir)) Directory.CreateDirectory(destDir);
+
                         if (isCurrentFileLarge)
                         {
                             BackupController.LargeFileSemaphore.Wait(cancellationToken);
                             largeFileSemHeld = true;
                         }
 
-                        lock (lockForProcessedCount) UpdateRealTimeStateForJob(job, file, destinationFilePath, totalFiles, processedFilesCount, job.GetCurrentStatusDisplay());
+                        lock (_logAndStateLock) UpdateRealTimeStateForJob(job, file, destinationFilePath, totalFiles, processedFilesCount, job.GetCurrentStatusDisplay());
 
                         bool shouldEncryptFile = IsCryptChecked && encryptExtensions.Contains(currentFileExtension);
                         bool isSourceFileEncrypted = IsFileEncrypted(file);
@@ -441,7 +463,7 @@ namespace EasySave.Maui.Services
                         }
                         else
                         {
-                            fileProcessTimer.Start();
+                            fileProcessTimer.Start(); 
                             _fileHelper.CopyFile(file, destinationFilePath);
                             fileProcessTimer.Stop();
                             fileCopyTime = (long)fileProcessTimer.GetElapsedMilliseconds();
@@ -459,12 +481,12 @@ namespace EasySave.Maui.Services
                             }
                         }
 
-                        lock (lockForProcessedCount)
+                        lock (_logAndStateLock) // Synchroniser l'accès au logger et au state manager
                         {
                             processedFilesCount++;
                             job.Progress = (double)processedFilesCount / totalFiles * 100;
                             progressReporter?.Report(job.Progress / 100.0);
-                            _logger.LogBackupAction(job.Name, file, destinationFilePath, currentFileSize, (double)fileCopyTime, fileEncryptionTime, wasFileSkipped); // jobStopped = wasFileSkipped
+                            _logger.LogBackupAction(job.Name, file, destinationFilePath, currentFileSize, (double)fileCopyTime, fileEncryptionTime, wasFileSkipped);
                             UpdateRealTimeStateForJob(job, file, destinationFilePath, totalFiles, processedFilesCount, job.GetCurrentStatusDisplay());
                         }
 
@@ -474,7 +496,7 @@ namespace EasySave.Maui.Services
                     catch (Exception ex)
                     {
                         System.Diagnostics.Debug.WriteLine($"Erreur fichier '{Path.GetFileName(file)}' (Job '{job.Name}', TID {Thread.CurrentThread.ManagedThreadId}): {ex.Message}");
-                        lock (lockForProcessedCount)
+                        lock (_logAndStateLock)
                         {
                             _logger.LogBackupAction(job.Name, file, destinationFilePath, currentFileSize, -1, -1, true);
                             UpdateRealTimeStateForJob(job, file, destinationFilePath, totalFiles, processedFilesCount, "ACTIVE_WITH_FILE_ERROR");
@@ -490,7 +512,7 @@ namespace EasySave.Maui.Services
             {
                 System.Diagnostics.Debug.WriteLine($"PerformBackupInternal pour '{job.Name}' annulé.");
                 UpdateRealTimeStateForJob(job, null, null, totalFiles, processedFilesCount, "CANCELLED");
-                job.Progress = (double)processedFilesCount / (totalFiles > 0 ? totalFiles : 1) * 100;
+                job.Progress = totalFiles > 0 ? (double)processedFilesCount / totalFiles * 100 : 0;
                 throw;
             }
             catch (AggregateException ae)
@@ -501,27 +523,27 @@ namespace EasySave.Maui.Services
                     System.Diagnostics.Debug.WriteLine($"Erreur aggrégée dans PerformBackupInternal pour '{job.Name}': {ex.InnerException?.Message ?? ex.Message}");
                     return true;
                 });
-                job.Progress = (double)processedFilesCount / (totalFiles > 0 ? totalFiles : 1) * 100;
+                job.Progress = totalFiles > 0 ? (double)processedFilesCount / totalFiles * 100 : 0;
                 UpdateRealTimeStateForJob(job, null, null, totalFiles, processedFilesCount, wasCancellation ? "CANCELLED" : "ERROR_AGGREGATE");
                 if (wasCancellation) throw new OperationCanceledException("Sauvegarde annulée via AggregateException.");
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Erreur globale dans PerformBackupInternal pour '{job.Name}': {ex.Message}");
-                job.Progress = (double)processedFilesCount / (totalFiles > 0 ? totalFiles : 1) * 100;
+                job.Progress = totalFiles > 0 ? (double)processedFilesCount / totalFiles * 100 : 0;
                 UpdateRealTimeStateForJob(job, null, null, totalFiles, processedFilesCount, "ERROR_GLOBAL");
                 throw;
             }
 
             if (!cancellationToken.IsCancellationRequested)
             {
-                if (processedFilesCount == totalFiles)
+                if (processedFilesCount == totalFiles && totalFiles > 0) 
                 {
                     job.Progress = 100;
                     UpdateRealTimeStateForJob(job, null, null, totalFiles, processedFilesCount, "COMPLETED");
                     MainThread.BeginInvokeOnMainThread(async () => await Toast.Make($"Job '{job.Name}' terminé avec succès.", ToastDuration.Short).Show());
                 }
-                else
+                else if (totalFiles > 0) 
                 {
                     UpdateRealTimeStateForJob(job, null, null, totalFiles, processedFilesCount, "COMPLETED_WITH_ERRORS");
                     MainThread.BeginInvokeOnMainThread(async () => await Toast.Make($"Job '{job.Name}' terminé (erreurs sur {totalFiles - processedFilesCount} fichier(s)).", ToastDuration.Long).Show());
@@ -529,48 +551,33 @@ namespace EasySave.Maui.Services
             }
         }
 
-        /*
-        private string FormatBytes(long bytes)
-        {
-            string[] sizes = { "B", "KB", "MB", "GB", "TB" };
-            double len = bytes;
-            int order = 0;
-            while (len >= 1024 && order < sizes.Length - 1)
-            {
-                order++;
-                len /= 1024;
-            }
-
-            return $"{len:0.##} {sizes[order]}";
-        }
-        */
-
-
         private static bool CompareFileHashes(string file1Path, string file2Path)
         {
-            using var sha256 = SHA256.Create();
-            byte[] hash1;
-            byte[] hash2;
-
-            using (var stream1 = File.OpenRead(file1Path))
-                hash1 = sha256.ComputeHash(stream1);
-
-            using (var stream2 = File.OpenRead(file2Path))
-                hash2 = sha256.ComputeHash(stream2);
-
-            return hash1.SequenceEqual(hash2);
+            try
+            {
+                using var sha256 = SHA256.Create();
+                byte[] hash1, hash2;
+                using (var stream1 = File.OpenRead(file1Path)) hash1 = sha256.ComputeHash(stream1);
+                using (var stream2 = File.OpenRead(file2Path)) hash2 = sha256.ComputeHash(stream2);
+                return hash1.SequenceEqual(hash2);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Erreur CompareFileHashes: {ex.Message}");
+                return false;
+            }
         }
 
         private bool IsBusinessSoftwareRunning(List<string> softwareNames)
         {
             try
             {
-                foreach (var softwareName in softwareNames)
+                foreach (var softwareName in softwareNames.Where(s => !string.IsNullOrWhiteSpace(s)))
                 {
-                    var processes = Process.GetProcessesByName(softwareName);
-                    if (processes.Any())
+                    var processNameOnly = Path.GetFileNameWithoutExtension(softwareName);
+                    if (Process.GetProcessesByName(processNameOnly).Any())
                     {
-                        System.Diagnostics.Debug.WriteLine($"Logiciel métier détecté : {softwareName}");
+                        System.Diagnostics.Debug.WriteLine($"Logiciel métier détecté : {processNameOnly}");
                         return true;
                     }
                 }
@@ -578,7 +585,7 @@ namespace EasySave.Maui.Services
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Erreur lors de la vérification des logiciels métiers : {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Erreur vérification logiciels métiers : {ex.Message}");
                 return false;
             }
         }
@@ -587,58 +594,61 @@ namespace EasySave.Maui.Services
         {
             try
             {
-                if (!File.Exists(filePath))
-                    return false;
-
+                if (!File.Exists(filePath)) return false;
                 using (var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read))
                 {
+                    if (fs.Length < 8) return false;
                     byte[] buffer = new byte[8];
-                    int bytesRead = fs.Read(buffer, 0, buffer.Length);
-
-                    if (bytesRead < buffer.Length)
-                        return false;
-
-                    string decrypted = XOREncrypt(Encoding.UTF8.GetString(buffer));
-
-                    return decrypted.StartsWith("Ces1Kryp");
+                    fs.Read(buffer, 0, buffer.Length);
+                    string headerAsString = Encoding.UTF8.GetString(buffer);
+                    string decryptedHeader = XOREncrypt(headerAsString, "Ces1Kryp");
+                    return decryptedHeader.StartsWith("Ces1Kryp");
                 }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Erreur lors de la vérification du chiffrement du fichier {filePath} : {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Erreur IsFileEncrypted pour {filePath}: {ex.Message}");
                 return false;
             }
         }
 
-        private string XOREncrypt(string data)
+        private string XOREncrypt(string data, string key = "Ces1Kryp") 
         {
             var dataLen = data.Length;
-            var keyLen = "Ces1Kryp".Length;
+            var keyLen = key.Length;
+            if (keyLen == 0) return data; 
             char[] output = new char[dataLen];
-
             for (var i = 0; i < dataLen; ++i)
             {
-                output[i] = (char)(data[i] ^ "Ces1Kryp"[i % keyLen]);
+                output[i] = (char)(data[i] ^ key[i % keyLen]);
             }
-
             return new string(output);
         }
 
-        public void RunBackupJobByIndex(int index, bool IsCryptChecked, IProgress<double> progressReporter = null)
+        
+        public void RunBackupJobByIndex(int index, bool IsCryptChecked)
         {
-            throw new NotImplementedException();
+            System.Diagnostics.Debug.WriteLine($"RunBackupJobByIndex (sync) appelée. Redirection vers Async. Pensez à mettre à jour IBackupService.");
+            if (index < 0 || index >= _backupJobs.Count)
+            {
+                MainThread.BeginInvokeOnMainThread(async () => await Toast.Make($"Le job avec n° {index + 1} est inexistant", ToastDuration.Short).Show());
+                return;
+            }
+            var job = _backupJobs[index];
+            _ = RunBackupJobAsync(job, IsCryptChecked, CancellationToken.None, null);
         }
-    }
+        public void RunBackupJob(BackupJob job, bool isCryptChecked)
+        {
+            System.Diagnostics.Debug.WriteLine($"RunBackupJob (sync) appelée pour '{job?.Name}'. Redirection vers Async.");
+            _ = RunBackupJobAsync(job, isCryptChecked, CancellationToken.None, null);
+        }
 
+    }
 
     public static class BackupController
     {
-        // Stocke l'état de chaque fichier prioritaire (true = en attente, false = terminé)
         public static ConcurrentDictionary<string, bool> RemainingPriorityFiles { get; } = new();
-
-        // Contrôle le nombre de fichiers "lourds" (> maxFileSize) copiés en même temps
         public static SemaphoreSlim LargeFileSemaphore { get; } = new(1, 1);
         public static object CryptoSoftLock { get; } = new object();
     }
-
 }

@@ -5,6 +5,7 @@ namespace EasySave.Maui.Models
 {
     public class BackupJob
     {
+        private ManualResetEventSlim _pauseSignal = new ManualResetEventSlim(true);
         public string Name { get; set; }
         public string SourcePath { get; set; }
         public string TargetPath { get; set; }
@@ -19,8 +20,8 @@ namespace EasySave.Maui.Models
         [JsonIgnore]
         public bool IsSystemPaused { get; set; } = false; // Pause due au logiciel métier
 
-        [JsonIgnore] 
-        public ManualResetEventSlim PauseSignal { get; } = new ManualResetEventSlim(true); // true = non en pause au début
+        [JsonIgnore]
+        public ManualResetEventSlim PauseSignal => _pauseSignal;
 
         public BackupJob(string name, string sourcePath, string targetPath, BackupType type)
         {
@@ -34,7 +35,7 @@ namespace EasySave.Maui.Models
 
         public BackupJob()
         {
-            PauseSignal = new ManualResetEventSlim(true);
+            _pauseSignal = new ManualResetEventSlim(true);
             Progress = 0;
         }
 
@@ -82,10 +83,35 @@ namespace EasySave.Maui.Models
 
         public void NotifyCompletionOrStop()
         {
+            System.Diagnostics.Debug.WriteLine($"NotifyCompletionOrStop pour {Name}");
             IsActive = false;
             IsUserPaused = false;
             IsSystemPaused = false;
-            PauseSignal.Set(); 
+            try
+            {
+                PauseSignal.Set();
+            }
+            catch (ObjectDisposedException)
+            {
+                System.Diagnostics.Debug.WriteLine($"PauseSignal déjà disposé pour {Name}");
+            }
+        }
+
+        public void ResetPauseStatesForNewRun()
+        {
+            System.Diagnostics.Debug.WriteLine($"ResetPauseStatesForNewRun pour {Name}");
+            IsUserPaused = false;
+            IsSystemPaused = false;
+            try
+            {
+                _pauseSignal.Dispose(); 
+                _pauseSignal = new ManualResetEventSlim(true); 
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Erreur lors de la réinitialisation de PauseSignal pour {Name}: {ex.Message}");
+                _pauseSignal = new ManualResetEventSlim(true); 
+            }
         }
     }
 }
