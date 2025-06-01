@@ -106,7 +106,7 @@ public partial class MainViewModel : ObservableObject
                 OnPropertyChanged(nameof(CurrentLogFormat));
                 Toast.Make($"LogFileType mis à jour : {logFileType}", ToastDuration.Short).Show();
 
-                
+
             }
         }
     }
@@ -164,7 +164,7 @@ public partial class MainViewModel : ObservableObject
     private string changeLanguage;
     [ObservableProperty]
     private string changeLogFormat;
-    
+
 
     private void UpdateTexts()
     {
@@ -201,7 +201,7 @@ public partial class MainViewModel : ObservableObject
         _localizationService.SetLanguage(language);
         UpdateTexts();
         OnPropertyChanged(nameof(IsFrench));
-        
+
         Toast.Make($"Langue : {(value ? "Français" : "Anglais")}", ToastDuration.Short).Show();
 
     }
@@ -296,7 +296,7 @@ public partial class MainViewModel : ObservableObject
     private void OpenAddJobPopUp()
     {
         IsVisibleAddJob = true;
-        
+
     }
 
     [RelayCommand]
@@ -344,7 +344,7 @@ public partial class MainViewModel : ObservableObject
             return;
 
         }
-        
+
         var cleanedSourcePath = SourcePath.Trim('"');
         var cleanedTargetPath = TargetPath.Trim('"');
 
@@ -379,7 +379,37 @@ public partial class MainViewModel : ObservableObject
 
         var tasks = new List<Task>();
         var progresses = new Dictionary<BackupJob, double>();
+        var filesCountPerJob = new Dictionary<BackupJob, int>();
+        int totalFiles = 0;
 
+        // Phase 1 : préparation (comptage fichiers par job)
+        foreach (var job in SelectedJobs)
+        {
+            try
+            {
+                int fileCount = Directory.Exists(job.SourcePath)
+                    ? Directory.GetFiles(job.SourcePath, "*.*", SearchOption.AllDirectories).Length
+                    : 0;
+
+                filesCountPerJob[job] = fileCount;
+                totalFiles += fileCount;
+
+                progresses[job] = 0;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[RunSelectedJobs] Erreur lors du comptage des fichiers pour {job.Name}: {ex.Message}");
+                filesCountPerJob[job] = 0;
+            }
+        }
+
+        if (totalFiles == 0)
+        {
+            ProgressBarValue = 1.0;
+            return;
+        }
+
+        // Phase 2 : exécution parallèle des jobs sélectionnés
         Device.BeginInvokeOnMainThread(() =>
         {
             foreach (var job in SelectedJobs)
@@ -392,23 +422,49 @@ public partial class MainViewModel : ObservableObject
         foreach (var job in SelectedJobs.ToList())
         {
             var cts = new CancellationTokenSource();
-            _jobCancellationTokens[job.Name] = cts; // Stocker le token
+            _jobCancellationTokens[job.Name] = cts;
+
             var progress = new Progress<double>(value =>
             {
                 lock (progresses)
                 {
                     progresses[job] = value;
-                    ProgressBarValue = progresses.Values.Average();
+
+                    double weightedProgress = progresses.Sum(kvp =>
+                    {
+                        int count = filesCountPerJob.TryGetValue(kvp.Key, out var c) ? c : 0;
+                        return kvp.Value * count;
+                    });
+
+                    ProgressBarValue = weightedProgress / totalFiles;
                 }
             });
 
             var task = Task.Run(async () =>
             {
-                await _backupService.RunBackupJobAsync(job, IsCryptChecked, cts.Token, progress);
+                System.Diagnostics.Debug.WriteLine($"[RunSelectedJobs] Lancement du job: {job.Name}");
+
+                try
+                {
+                    await _backupService.RunBackupJobAsync(job, IsCryptChecked, cts.Token, progress);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[RunSelectedJobs] Exception pendant le job {job.Name}: {ex.Message}");
+                }
+
+                System.Diagnostics.Debug.WriteLine($"[RunSelectedJobs] Fin du job: {job.Name}");
+
+                Device.BeginInvokeOnMainThread(() =>
+                {
+                    ActiveJobs.Remove(job);
+                    _jobCancellationTokens.Remove(job.Name);
+                });
             });
 
             tasks.Add(task);
         }
+
 
         await Task.WhenAll(tasks);
 
@@ -417,11 +473,12 @@ public partial class MainViewModel : ObservableObject
             foreach (var job in SelectedJobs)
             {
                 ActiveJobs.Remove(job);
-                _jobCancellationTokens.Remove(job.Name); // Nettoyer le token
+                _jobCancellationTokens.Remove(job.Name);
             }
-            ProgressBarValue = 0;
+            ProgressBarValue = 1.0;
         });
     }
+
 
 
     [RelayCommand]
@@ -430,50 +487,88 @@ public partial class MainViewModel : ObservableObject
         if (Jobs == null || Jobs.Count == 0)
             return;
 
-        var tasks = new List<Task>();
         var progresses = new Dictionary<BackupJob, double>();
+        var filesCountPerJob = new Dictionary<BackupJob, int>();
+        int totalFiles = 0;
 
-        Device.BeginInvokeOnMainThread(() =>
+        // Phase 1 : préparation
+        foreach (var job in Jobs)
         {
-            foreach (var job in Jobs)
+            try
+            {
+                int fileCount = Directory.Exists(job.SourcePath)
+                    ? Directory.GetFiles(job.SourcePath, "*.*", SearchOption.AllDirectories).Length
+                    : 0;
+
+                filesCountPerJob[job] = fileCount;
+                totalFiles += fileCount;
+
+                progresses[job] = 0;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[RunAllJobs] Erreur lors du comptage des fichiers pour {job.Name}: {ex.Message}");
+                filesCountPerJob[job] = 0;
+            }
+        }
+
+        if (totalFiles == 0)
+        {
+            ProgressBarValue = 1.0;
+            return;
+        }
+
+        // Phase 2 : exécution des jobs
+        foreach (var job in Jobs)
+        {
+            Device.BeginInvokeOnMainThread(() =>
             {
                 if (!ActiveJobs.Contains(job))
                     ActiveJobs.Add(job);
-            }
-        });
+            });
 
-        foreach (var job in Jobs)
-        {
             var cts = new CancellationTokenSource();
             var progress = new Progress<double>(value =>
             {
                 lock (progresses)
                 {
                     progresses[job] = value;
-                    ProgressBarValue = progresses.Values.Average();
+
+                    double weightedProgress = progresses.Sum(kvp =>
+                    {
+                        int count = filesCountPerJob.TryGetValue(kvp.Key, out var c) ? c : 0;
+                        return kvp.Value * count;
+                    });
+
+                    ProgressBarValue = weightedProgress / totalFiles;
                 }
             });
 
-            var task = Task.Run(async () => // Rendre la lambda async pour pouvoir await RunBackupJobAsync
+            System.Diagnostics.Debug.WriteLine($"[RunAllJobs] Lancement du job: {job.Name}");
+
+            try
             {
-                // Appel corrigé : CancellationToken est le 3ème argument, IProgress<double> est le 4ème
                 await _backupService.RunBackupJobAsync(job, IsCryptChecked, cts.Token, progress);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[RunAllJobs] Exception pendant l'exécution du job {job.Name}: {ex.Message}");
+            }
+
+            System.Diagnostics.Debug.WriteLine($"[RunAllJobs] Fin du job: {job.Name}");
+
+            Device.BeginInvokeOnMainThread(() =>
+            {
+                ActiveJobs.Remove(job);
             });
-
-            tasks.Add(task);
         }
-
-        await Task.WhenAll(tasks);
 
         Device.BeginInvokeOnMainThread(() =>
         {
-            foreach (var job in Jobs)
-            {
-                ActiveJobs.Remove(job);
-            }
-            ProgressBarValue = 0;
+            ProgressBarValue = 1.0;
         });
     }
+
 
 
 
@@ -516,8 +611,9 @@ public partial class MainViewModel : ObservableObject
             }
         }
 
-        var tasks = new List<Task>();
         var progresses = new Dictionary<BackupJob, double>();
+        var filesCountPerJob = new Dictionary<BackupJob, int>();
+        int totalFiles = 0;
         var selectedJobs = new List<BackupJob>();
 
         foreach (var index in selectedJobsIndices)
@@ -534,6 +630,36 @@ public partial class MainViewModel : ObservableObject
             selectedJobs.Add(job);
         }
 
+        // Phase 1 : comptage fichiers par job
+        foreach (var job in selectedJobs)
+        {
+            try
+            {
+                int fileCount = Directory.Exists(job.SourcePath)
+                    ? Directory.GetFiles(job.SourcePath, "*.*", SearchOption.AllDirectories).Length
+                    : 0;
+
+                filesCountPerJob[job] = fileCount;
+                totalFiles += fileCount;
+
+                progresses[job] = 0;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[CreateSelectionJobs] Erreur lors du comptage pour {job.Name}: {ex.Message}");
+                filesCountPerJob[job] = 0;
+            }
+        }
+
+        if (totalFiles == 0)
+        {
+            ProgressBarValue = 1.0;
+            return;
+        }
+
+        IsVisibleCreateSelection = false;
+        SelectedJobsText = "";
+
         Device.BeginInvokeOnMainThread(() =>
         {
             foreach (var job in selectedJobs)
@@ -543,22 +669,43 @@ public partial class MainViewModel : ObservableObject
             }
         });
 
+        var tasks = new List<Task>();
+
         foreach (var job in selectedJobs)
         {
             var cts = new CancellationTokenSource();
+            _jobCancellationTokens[job.Name] = cts;
+
             var progress = new Progress<double>(value =>
             {
                 lock (progresses)
                 {
                     progresses[job] = value;
-                    ProgressBarValue = progresses.Values.Average();
+
+                    double weightedProgress = progresses.Sum(kvp =>
+                    {
+                        int count = filesCountPerJob.TryGetValue(kvp.Key, out var c) ? c : 0;
+                        return kvp.Value * count;
+                    });
+
+                    ProgressBarValue = weightedProgress / totalFiles;
                 }
             });
 
-            var task = Task.Run(async () => // Rendre la lambda async pour pouvoir await RunBackupJobAsync
+            var task = Task.Run(async () =>
             {
-                // Appel corrigé : CancellationToken est le 3ème argument, IProgress<double> est le 4ème
-                await _backupService.RunBackupJobAsync(job, IsCryptChecked, cts.Token, progress);
+                System.Diagnostics.Debug.WriteLine($"[CreateSelectionJobs] Lancement du job: {job.Name}");
+
+                try
+                {
+                    await _backupService.RunBackupJobAsync(job, IsCryptChecked, cts.Token, progress);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[CreateSelectionJobs] Exception pour {job.Name}: {ex.Message}");
+                }
+
+                System.Diagnostics.Debug.WriteLine($"[CreateSelectionJobs] Fin du job: {job.Name}");
             });
 
             tasks.Add(task);
@@ -571,13 +718,13 @@ public partial class MainViewModel : ObservableObject
             foreach (var job in selectedJobs)
             {
                 ActiveJobs.Remove(job);
+                _jobCancellationTokens.Remove(job.Name);
             }
-            ProgressBarValue = 0;
+            ProgressBarValue = 1.0;
         });
 
-        IsVisibleCreateSelection = false;
-        SelectedJobsText = "";
     }
+
 
 
 
@@ -588,7 +735,7 @@ public partial class MainViewModel : ObservableObject
         {
             if (!extension.StartsWith("."))
             {
-                extension = "."+extension;
+                extension = "." + extension;
             }
             Extensions.Add(extension);
             NewExtension = string.Empty;

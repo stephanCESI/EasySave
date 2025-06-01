@@ -14,7 +14,7 @@ public class JobIndexConverter : IMultiValueConverter
     {
         if (values.Length == 2 && values[0] is IList<BackupJob> jobs && values[1] is BackupJob currentJob)
         {
-            return jobs.IndexOf(currentJob);
+            return jobs.IndexOf(currentJob)+1;
         }
         return 0; // Retourne 0 si les valeurs ne sont pas valides
     }

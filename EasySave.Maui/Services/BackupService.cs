@@ -253,28 +253,37 @@ namespace EasySave.Maui.Services
         public async Task RunBackupJobAsync(BackupJob job, bool isCryptChecked, CancellationToken cancellationToken, IProgress<double> progressReporter = null)
         {
             System.Diagnostics.Debug.WriteLine($"Début RunBackupJobAsync pour job: {job?.Name}");
-            if (job == null) { System.Diagnostics.Debug.WriteLine("RunBackupJobAsync: job est null."); return; }
+            if (job == null)
+            {
+                System.Diagnostics.Debug.WriteLine("RunBackupJobAsync: job est null.");
+                return;
+            }
 
             if (job.IsActive)
             {
-                await MainThread.InvokeOnMainThreadAsync(() => Toast.Make($"Job '{job.Name}' déjà en cours.", ToastDuration.Short).Show());
+                await MainThread.InvokeOnMainThreadAsync(() =>
+                    Toast.Make($"Job '{job.Name}' déjà en cours.", ToastDuration.Short).Show());
                 return;
             }
 
             var settings = AppSettings.Load();
             System.Diagnostics.Debug.WriteLine($"Settings chargés: {settings != null}");
+
             if (IsBusinessSoftwareRunning(settings.Softwares ?? new List<string>()))
             {
-                await MainThread.InvokeOnMainThreadAsync(() => Toast.Make("Logiciel métier actif. Lancement annulé.", ToastDuration.Long).Show());
-                // Utiliser un lock pour le logger si appelé depuis un contexte potentiellement concurrent
-                lock (_logAndStateLock) _logger.LogBackupAction(job.Name, "N/A", "N/A", 0, 0, 0, true);
+                await MainThread.InvokeOnMainThreadAsync(() =>
+                    Toast.Make("Logiciel métier actif. Lancement annulé.", ToastDuration.Long).Show());
+
+                lock (_logAndStateLock)
+                    _logger.LogBackupAction(job.Name, "N/A", "N/A", 0, 0, 0, true);
                 return;
             }
 
             System.Diagnostics.Debug.WriteLine("Initialisation des propriétés du job");
+
             try
             {
-                job.ResetPauseStatesForNewRun(); // Utilise la méthode de BackupJob pour réinitialiser
+                job.ResetPauseStatesForNewRun();
                 job.IsActive = true;
                 job.LastRun = DateTime.Now;
                 job.Progress = 0;
@@ -284,23 +293,33 @@ namespace EasySave.Maui.Services
                 SaveJobsToFile();
 
                 System.Diagnostics.Debug.WriteLine("Lancement de PerformBackupInternal");
-                await Task.Run(() => PerformBackupInternal(job, isCryptChecked, cancellationToken, progressReporter), cancellationToken);
+
+                await Task.Run(() =>
+                    PerformBackupInternal(job, isCryptChecked, cancellationToken, progressReporter),
+                    cancellationToken);
             }
             catch (OperationCanceledException)
             {
                 System.Diagnostics.Debug.WriteLine($"Job '{job.Name}' annulé via CancellationToken.");
-                await MainThread.InvokeOnMainThreadAsync(() => Toast.Make($"Job '{job.Name}' annulé.", ToastDuration.Short).Show());
-                lock (_logAndStateLock) _logger.LogBackupAction(job.Name, "N/A", "N/A", 0, 0, 0, true);
+                await MainThread.InvokeOnMainThreadAsync(() =>
+                    Toast.Make($"Job '{job.Name}' annulé.", ToastDuration.Short).Show());
+
+                lock (_logAndStateLock)
+                    _logger.LogBackupAction(job.Name, "N/A", "N/A", 0, 0, 0, true);
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Erreur dans RunBackupJobAsync pour '{job.Name}': {ex.Message}\n{ex.StackTrace}");
-                await MainThread.InvokeOnMainThreadAsync(() => Toast.Make($"Erreur Job '{job.Name}': {ex.Message}", ToastDuration.Long).Show());
-                lock (_logAndStateLock) _logger.LogBackupAction(job.Name, "N/A", "N/A", 0, 0, 0, true);
+                await MainThread.InvokeOnMainThreadAsync(() =>
+                    Toast.Make($"Erreur Job '{job.Name}': {ex.Message}", ToastDuration.Long).Show());
+
+                lock (_logAndStateLock)
+                    _logger.LogBackupAction(job.Name, "N/A", "N/A", 0, 0, 0, true);
             }
             finally
             {
                 System.Diagnostics.Debug.WriteLine($"Fin RunBackupJobAsync (finally) pour job: {job?.Name}");
+
                 try
                 {
                     job.NotifyCompletionOrStop();
@@ -315,6 +334,7 @@ namespace EasySave.Maui.Services
                 }
             }
         }
+
 
         public void UpdateState(BackupJob newJob)
         {
@@ -362,6 +382,8 @@ namespace EasySave.Maui.Services
             int totalFiles = 0;
             int processedFilesCount = 0;
             PerformanceTimer fileProcessTimer = new PerformanceTimer();
+
+            System.Diagnostics.Debug.WriteLine($"[PerformBackupInternal] Début pour {job.Name}");
 
             try
             {
@@ -542,12 +564,13 @@ namespace EasySave.Maui.Services
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Erreur globale dans PerformBackupInternal pour '{job.Name}': {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"[PerformBackupInternal] Exception dans {job.Name} : {ex.Message}");
+                throw;
                 job.Progress = totalFiles > 0 ? (double)processedFilesCount / totalFiles * 100 : 0;
                 UpdateRealTimeStateForJob(job, null, null, totalFiles, processedFilesCount, "ERROR_GLOBAL");
                 throw;
             }
-
+            System.Diagnostics.Debug.WriteLine($"[PerformBackupInternal] Fin pour {job.Name}");
             if (!cancellationToken.IsCancellationRequested)
             {
                 if (processedFilesCount == totalFiles && totalFiles > 0)
