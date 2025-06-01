@@ -8,7 +8,7 @@ using EasySave.Maui.Utils;
 using Newtonsoft.Json;
 using System.Collections.Concurrent;
 using System.Diagnostics;
-using EasySave.Maui.Localizations; 
+using EasySave.Maui.Localizations;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -29,7 +29,7 @@ namespace EasySave.Maui.Services
         private readonly object _logAndStateLock = new object();
 
 
-        public BackupService(Logger logger , LocalizationService localizationService)
+        public BackupService(Logger logger, LocalizationService localizationService)
         {
             _backupJobs = new List<BackupJob>();
             _fileHelper = new FileHelper();
@@ -316,13 +316,13 @@ namespace EasySave.Maui.Services
             }
         }
 
-        public void UpdateState(BackupJob newJob) 
+        public void UpdateState(BackupJob newJob)
         {
             var existingState = _backupJobs.Find(s => s.Name == newJob.Name); // pas utilisé
             SaveBackupJson();
         }
 
-        private void SaveBackupJson() 
+        private void SaveBackupJson()
         {
             try
             {
@@ -356,11 +356,12 @@ namespace EasySave.Maui.Services
             return _backupJobs.AsReadOnly();
         }
 
+
         private void PerformBackupInternal(BackupJob job, bool IsCryptChecked, CancellationToken cancellationToken, IProgress<double> progressReporter)
         {
             int totalFiles = 0;
             int processedFilesCount = 0;
-            PerformanceTimer fileProcessTimer = new PerformanceTimer(); 
+            PerformanceTimer fileProcessTimer = new PerformanceTimer();
 
             try
             {
@@ -409,6 +410,16 @@ namespace EasySave.Maui.Services
                 (file, loopState) =>
                 {
                     cancellationToken.ThrowIfCancellationRequested();
+
+                    // Pause automatique si logiciel métier actif
+                    while (IsBusinessSoftwareRunning(settings.Softwares ?? new List<string>()))
+                    {
+                        cancellationToken.ThrowIfCancellationRequested();
+                        job.PauseSignal.Reset(); // Met en pause
+                        Thread.Sleep(500); // Attente avant de retester
+                    }
+                    job.PauseSignal.Set(); // Reprend le job
+
                     job.PauseSignal.Wait(cancellationToken);
                     cancellationToken.ThrowIfCancellationRequested();
 
@@ -463,7 +474,7 @@ namespace EasySave.Maui.Services
                         }
                         else
                         {
-                            fileProcessTimer.Start(); 
+                            fileProcessTimer.Start();
                             _fileHelper.CopyFile(file, destinationFilePath);
                             fileProcessTimer.Stop();
                             fileCopyTime = (long)fileProcessTimer.GetElapsedMilliseconds();
@@ -507,6 +518,7 @@ namespace EasySave.Maui.Services
                         if (largeFileSemHeld) BackupController.LargeFileSemaphore.Release();
                     }
                 });
+
             }
             catch (OperationCanceledException)
             {
@@ -518,7 +530,8 @@ namespace EasySave.Maui.Services
             catch (AggregateException ae)
             {
                 bool wasCancellation = false;
-                ae.Handle(ex => {
+                ae.Handle(ex =>
+                {
                     if (ex is OperationCanceledException) { wasCancellation = true; return true; }
                     System.Diagnostics.Debug.WriteLine($"Erreur aggrégée dans PerformBackupInternal pour '{job.Name}': {ex.InnerException?.Message ?? ex.Message}");
                     return true;
@@ -537,13 +550,13 @@ namespace EasySave.Maui.Services
 
             if (!cancellationToken.IsCancellationRequested)
             {
-                if (processedFilesCount == totalFiles && totalFiles > 0) 
+                if (processedFilesCount == totalFiles && totalFiles > 0)
                 {
                     job.Progress = 100;
                     UpdateRealTimeStateForJob(job, null, null, totalFiles, processedFilesCount, "COMPLETED");
                     MainThread.BeginInvokeOnMainThread(async () => await Toast.Make($"Job '{job.Name}' terminé avec succès.", ToastDuration.Short).Show());
                 }
-                else if (totalFiles > 0) 
+                else if (totalFiles > 0)
                 {
                     UpdateRealTimeStateForJob(job, null, null, totalFiles, processedFilesCount, "COMPLETED_WITH_ERRORS");
                     MainThread.BeginInvokeOnMainThread(async () => await Toast.Make($"Job '{job.Name}' terminé (erreurs sur {totalFiles - processedFilesCount} fichier(s)).", ToastDuration.Long).Show());
@@ -612,11 +625,11 @@ namespace EasySave.Maui.Services
             }
         }
 
-        private string XOREncrypt(string data, string key = "Ces1Kryp") 
+        private string XOREncrypt(string data, string key = "Ces1Kryp")
         {
             var dataLen = data.Length;
             var keyLen = key.Length;
-            if (keyLen == 0) return data; 
+            if (keyLen == 0) return data;
             char[] output = new char[dataLen];
             for (var i = 0; i < dataLen; ++i)
             {
@@ -625,7 +638,7 @@ namespace EasySave.Maui.Services
             return new string(output);
         }
 
-        
+
         public void RunBackupJobByIndex(int index, bool IsCryptChecked)
         {
             System.Diagnostics.Debug.WriteLine($"RunBackupJobByIndex (sync) appelée. Redirection vers Async. Pensez à mettre à jour IBackupService.");
