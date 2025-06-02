@@ -163,7 +163,6 @@ namespace EasySave.Maui.Services
             //    {
             //        Console.WriteLine($"Erreur lors de la déconnexion de {client.RemoteEndPoint} : {ex.Message}");
             //    }
-            }
         }
 
         public void StopServer()
