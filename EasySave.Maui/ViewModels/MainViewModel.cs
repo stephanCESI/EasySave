@@ -406,7 +406,7 @@ public partial class MainViewModel : ObservableObject
 
             _webSocketService.BroadcastJob(job, 0);
 
-            var task = Task.Run(() =>
+            var task = Task.Run(async () =>
             {
                 await _backupService.RunBackupJobAsync(job, IsCryptChecked, cts.Token, progress);
             });
@@ -460,7 +460,7 @@ public partial class MainViewModel : ObservableObject
 
             _webSocketService.BroadcastJob(job, 0); 
 
-            var task = Task.Run(() =>
+            var task = Task.Run(async () =>
             {
                 // Appel corrigé : CancellationToken est le 3ème argument, IProgress<double> est le 4ème
                 await _backupService.RunBackupJobAsync(job, IsCryptChecked, cts.Token, progress);
