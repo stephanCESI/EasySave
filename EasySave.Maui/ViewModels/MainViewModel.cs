@@ -541,6 +541,10 @@ public partial class MainViewModel : ObservableObject
             selectedJobs.Add(job);
         }
 
+
+        IsVisibleCreateSelection = false;
+        SelectedJobsText = "";
+
         Device.BeginInvokeOnMainThread(() =>
         {
             foreach (var job in selectedJobs)
@@ -582,8 +586,6 @@ public partial class MainViewModel : ObservableObject
             ProgressBarValue = 0;
         });
 
-        IsVisibleCreateSelection = false;
-        SelectedJobsText = "";
     }
 
 

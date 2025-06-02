@@ -409,16 +409,6 @@ namespace EasySave.Maui.Services
                 (file, loopState) =>
                 {
                     cancellationToken.ThrowIfCancellationRequested();
-
-                    // Pause automatique si logiciel métier actif
-                    while (IsBusinessSoftwareRunning(settings.Softwares ?? new List<string>()))
-                    {
-                        cancellationToken.ThrowIfCancellationRequested();
-                        job.PauseSignal.Reset(); // Met en pause
-                        Thread.Sleep(500); // Attente avant de retester
-                    }
-                    job.PauseSignal.Set(); // Reprend le job
-
                     job.PauseSignal.Wait(cancellationToken);
                     cancellationToken.ThrowIfCancellationRequested();
 
@@ -473,7 +463,7 @@ namespace EasySave.Maui.Services
                         }
                         else
                         {
-                            fileProcessTimer.Start();
+                            fileProcessTimer.Start(); 
                             _fileHelper.CopyFile(file, destinationFilePath);
                             fileProcessTimer.Stop();
                             fileCopyTime = (long)fileProcessTimer.GetElapsedMilliseconds();
@@ -517,7 +507,6 @@ namespace EasySave.Maui.Services
                         if (largeFileSemHeld) BackupController.LargeFileSemaphore.Release();
                     }
                 });
-
             }
             catch (OperationCanceledException)
             {
