@@ -32,7 +32,8 @@ namespace EasySave.Maui.Logging
             logEntries.Add(logEntry);
 
             // On réécrit tout le fichier JSON avec les nouvelles données.
-            File.WriteAllText(filePath, JsonConvert.SerializeObject(logEntries, Newtonsoft.Json.Formatting.Indented));
+            //File.WriteAllText(filePath, JsonConvert.SerializeObject(logEntries, Newtonsoft.Json.Formatting.Indented));
+            //TO DO
         }
     }
 }

@@ -53,6 +53,7 @@
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
+
                 <CollectionView ItemsSource="{Binding Jobs}" 
                         SelectionMode="Multiple" 
                         SelectionChanged="OnSelectionChanged"

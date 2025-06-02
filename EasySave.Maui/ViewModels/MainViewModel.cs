@@ -15,7 +15,7 @@ public partial class MainViewModel : ObservableObject
     private readonly BackupService _backupService;
     private readonly WebSocketService _webSocketService;
     private readonly LocalizationService _localizationService;
-    
+    private readonly Dictionary<string, CancellationTokenSource> _jobCancellationTokens = new();
 
 
     public ObservableCollection<BackupJob> Jobs { get; } = new();
@@ -165,6 +165,7 @@ public partial class MainViewModel : ObservableObject
     private string changeLanguage;
     [ObservableProperty]
     private string changeLogFormat;
+    
 
     private void UpdateTexts()
     {
@@ -240,23 +241,57 @@ public partial class MainViewModel : ObservableObject
             Jobs.Add(job);
     }
 
-
+    [ObservableProperty]
+    private BackupJob selectedJob;
     [RelayCommand]
     private void PauseJob()
     {
-        Debug.WriteLine("PAUSE");
+        if (SelectedJobs != null && SelectedJobs.Any())
+        {
+            foreach (var job in SelectedJobs.Where(j => j.IsActive))
+            {
+                _backupService.RequestUserPauseJob(job.Name);
+            }
+            Toast.Make("Jobs sélectionnés mis en pause.", ToastDuration.Short).Show();
+        }
+        else
+        {
+            Toast.Make("Aucun job actif sélectionné pour mettre en pause.", ToastDuration.Short).Show();
+        }
     }
 
     [RelayCommand]
     private void RestartJob()
     {
-        Debug.WriteLine("RESTART");
+        if (SelectedJobs != null && SelectedJobs.Any())
+        {
+            foreach (var job in SelectedJobs.Where(j => j.IsActive))
+            {
+                _backupService.RequestUserResumeJob(job.Name);
+            }
+            Toast.Make("Jobs sélectionnés repris.", ToastDuration.Short).Show();
+        }
+        else
+        {
+            Toast.Make("Aucun job actif sélectionné pour reprendre.", ToastDuration.Short).Show();
+        }
     }
 
     [RelayCommand]
     private void StopJob()
     {
-        Debug.WriteLine("STOP");
+        if (SelectedJobs != null && SelectedJobs.Any())
+        {
+            foreach (var job in SelectedJobs.Where(j => j.IsActive))
+            {
+                _backupService.RequestUserResumeJob(job.Name);
+            }
+            Toast.Make("Jobs sélectionnés repris.", ToastDuration.Short).Show();
+        }
+        else
+        {
+            Toast.Make("Aucun job actif sélectionné pour reprendre.", ToastDuration.Short).Show();
+        }
     }
 
     [RelayCommand]
@@ -358,12 +393,13 @@ public partial class MainViewModel : ObservableObject
 
         foreach (var job in SelectedJobs.ToList())
         {
+            var cts = new CancellationTokenSource();
+            _jobCancellationTokens[job.Name] = cts; // Stocker le token
             var progress = new Progress<double>(value =>
             {
                 lock (progresses)
                 {
                     progresses[job] = value;
-
                     ProgressBarValue = progresses.Values.Average();
                 }
             });
@@ -372,7 +408,7 @@ public partial class MainViewModel : ObservableObject
 
             var task = Task.Run(() =>
             {
-                _backupService.RunBackupJob(job, IsCryptChecked, progress);
+                await _backupService.RunBackupJobAsync(job, IsCryptChecked, cts.Token, progress);
             });
 
             tasks.Add(task);
@@ -385,12 +421,11 @@ public partial class MainViewModel : ObservableObject
             foreach (var job in SelectedJobs)
             {
                 ActiveJobs.Remove(job);
+                _jobCancellationTokens.Remove(job.Name); // Nettoyer le token
             }
-
             ProgressBarValue = 0;
         });
     }
-
 
 
     [RelayCommand]
@@ -413,6 +448,7 @@ public partial class MainViewModel : ObservableObject
 
         foreach (var job in Jobs)
         {
+            var cts = new CancellationTokenSource();
             var progress = new Progress<double>(value =>
             {
                 lock (progresses)
@@ -426,7 +462,8 @@ public partial class MainViewModel : ObservableObject
 
             var task = Task.Run(() =>
             {
-                _backupService.RunBackupJob(job, IsCryptChecked, progress);
+                // Appel corrigé : CancellationToken est le 3ème argument, IProgress<double> est le 4ème
+                await _backupService.RunBackupJobAsync(job, IsCryptChecked, cts.Token, progress);
             });
 
             tasks.Add(task);
@@ -515,6 +552,7 @@ public partial class MainViewModel : ObservableObject
 
         foreach (var job in selectedJobs)
         {
+            var cts = new CancellationTokenSource();
             var progress = new Progress<double>(value =>
             {
                 lock (progresses)
@@ -524,9 +562,10 @@ public partial class MainViewModel : ObservableObject
                 }
             });
 
-            var task = Task.Run(() =>
+            var task = Task.Run(async () => // Rendre la lambda async pour pouvoir await RunBackupJobAsync
             {
-                _backupService.RunBackupJob(job, IsCryptChecked, progress);
+                // Appel corrigé : CancellationToken est le 3ème argument, IProgress<double> est le 4ème
+                await _backupService.RunBackupJobAsync(job, IsCryptChecked, cts.Token, progress);
             });
 
             tasks.Add(task);
